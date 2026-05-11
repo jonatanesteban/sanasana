@@ -33,7 +33,8 @@ export default function Unidad3() {
 
     if (modo === 'ecu_to_hor') {
       // Ecuatoriales -> Horizontales (Calcula Z, h, Az)
-      const hDec = dmsToDec(val1.d, val1.m, val1.s);
+      const hHorarioDec = dmsToDec(val1.d, val1.m, val1.s);
+      const hDec = hHorarioDec * 15; // Convertir horas a grados
       const decDec = dmsToDec(val2.d, val2.m, val2.s);
       const hRad = toRad(hDec);
       const decRad = toRad(decDec);
@@ -44,10 +45,26 @@ export default function Unidad3() {
       const zDec = toDeg(zRad);
 
       pasos.push({
+        titulo: 'Ángulo Horario (H)',
+        formula: 'H(grados) = H(horas) × 15',
+        desarrollo: `${hHorarioDec.toFixed(6)}h × 15`,
+        resultado: `${hDec.toFixed(4)}°`
+      });
+
+      pasos.push({
         titulo: 'Distancia Cenital (z)',
         formula: 'cos z = sen φ sen δ + cos φ cos δ cos H',
         desarrollo: `sen(${phiDec.toFixed(4)})sen(${decDec.toFixed(4)}) + cos(${phiDec.toFixed(4)})cos(${decDec.toFixed(4)})cos(${hDec.toFixed(4)})`,
         resultado: formatDMS(zDec)
+      });
+
+      // 1.1 Altura (h)
+      const hAstro = 90 - zDec;
+      pasos.push({
+        titulo: 'Altura del Astro (h)',
+        formula: 'h = 90° - z',
+        desarrollo: `90° - ${zDec.toFixed(4)}°`,
+        resultado: formatDMS(hAstro)
       });
 
       // 2. Az
@@ -147,9 +164,9 @@ export default function Unidad3() {
             <div className="input-group-box">
               <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Ángulo Horario (H)' : 'Azimut (Az)'}</h4>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input type="number" placeholder="°" className="form-input" value={val1.d} onChange={e => setVal1({...val1, d: e.target.value})} />
-                <input type="number" placeholder="'" className="form-input" value={val1.m} onChange={e => setVal1({...val1, m: e.target.value})} />
-                <input type="number" placeholder="''" className="form-input" value={val1.s} onChange={e => setVal1({...val1, s: e.target.value})} />
+                <input type="number" placeholder={modo === 'ecu_to_hor' ? "h" : "°"} className="form-input" value={val1.d} onChange={e => setVal1({...val1, d: e.target.value})} />
+                <input type="number" placeholder={modo === 'ecu_to_hor' ? "m" : "'"} className="form-input" value={val1.m} onChange={e => setVal1({...val1, m: e.target.value})} />
+                <input type="number" placeholder={modo === 'ecu_to_hor' ? "s" : "''"} className="form-input" value={val1.s} onChange={e => setVal1({...val1, s: e.target.value})} />
               </div>
             </div>
 
