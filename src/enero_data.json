@@ -1,0 +1,281 @@
+[
+  {
+    "id": "4b4d6a3b-5dc6-486d-b909-21cf93570db7",
+    "Día": "1",
+    "Día Juliano (246...)": "1041.5",
+    "T. Sidéreo Medio (h m s)": "6 42 38.6060",
+    "T. Sidéreo Aparente (h m s)": "6 42 38.9373",
+    "Ec. Equinoccios (E0​)": "0.3313",
+    "Fecha": "2026-01-01"
+  },
+  {
+    "id": "b6e5c6f3-7860-45da-b458-f637b09a3760",
+    "Día": "2",
+    "Día Juliano (246...)": "1042.5",
+    "T. Sidéreo Medio (h m s)": "6 46 35.5058",
+    "T. Sidéreo Aparente (h m s)": "6 46 35.1614",
+    "Ec. Equinoccios (E0​)": "0.3444",
+    "Fecha": "2026-01-02"
+  },
+  {
+    "id": "e4f0d9b2-7f21-4500-9826-c9642cea55ec",
+    "Día": "3",
+    "Día Juliano (246...)": "1043.5",
+    "T. Sidéreo Medio (h m s)": "6 50 31.7168",
+    "T. Sidéreo Aparente (h m s)": "6 50 32.0752",
+    "Ec. Equinoccios (E0​)": "0.3584",
+    "Fecha": "2026-01-03"
+  },
+  {
+    "id": "53dff698-8a8c-4cc1-a980-3fa06614b4ff",
+    "Día": "4",
+    "Día Juliano (246...)": "1044.5",
+    "T. Sidéreo Medio (h m s)": "6 54 28.2722",
+    "T. Sidéreo Aparente (h m s)": "6 54 28.6432",
+    "Ec. Equinoccios (E0​)": "0.371",
+    "Fecha": "2026-01-04"
+  },
+  {
+    "id": "a068789e-eb82-468a-98fa-6b269416252a",
+    "Día": "5",
+    "Día Juliano (246...)": "1045.5",
+    "T. Sidéreo Medio (h m s)": "6 58 24.8275",
+    "T. Sidéreo Aparente (h m s)": "6 58 25.2074",
+    "Ec. Equinoccios (E0​)": "0.3799",
+    "Fecha": "2026-01-05"
+  },
+  {
+    "id": "b655d3ad-7b7c-4991-8744-cede3c2bed63",
+    "Día": "6",
+    "Día Juliano (246...)": "1046.5",
+    "T. Sidéreo Medio (h m s)": "7 2 21.3829",
+    "T. Sidéreo Aparente (h m s)": "7 2 21.7673",
+    "Ec. Equinoccios (E0​)": "0.3844",
+    "Fecha": "2026-01-06"
+  },
+  {
+    "id": "7eab0f89-330d-4057-b678-088c620d318d",
+    "Día": "7",
+    "Día Juliano (246...)": "1047.5",
+    "T. Sidéreo Medio (h m s)": "7 6 17.9383",
+    "T. Sidéreo Aparente (h m s)": "7 6 18.3230",
+    "Ec. Equinoccios (E0​)": "0.3847",
+    "Fecha": "2026-01-07"
+  },
+  {
+    "id": "35b58e86-cb92-43f2-a4cc-02e4e33f4ab6",
+    "Día": "8",
+    "Día Juliano (246...)": "1048.5",
+    "T. Sidéreo Medio (h m s)": "7 10 14.4936",
+    "T. Sidéreo Aparente (h m s)": "7 10 14.8758",
+    "Ec. Equinoccios (E0​)": "0.3822",
+    "Fecha": "2026-01-08"
+  },
+  {
+    "id": "97439510-6b54-4104-95fc-8895f629bbcd",
+    "Día": "9",
+    "Día Juliano (246...)": "1049.5",
+    "T. Sidéreo Medio (h m s)": "7 14 11.0490",
+    "T. Sidéreo Aparente (h m s)": "7 14 11.4274",
+    "Ec. Equinoccios (E0​)": "0.3784",
+    "Fecha": "2026-01-09"
+  },
+  {
+    "id": "73df8061-8dbd-4c79-bdab-59f8ea637cc2",
+    "Día": "10",
+    "Día Juliano (246...)": "1050.5",
+    "T. Sidéreo Medio (h m s)": "7 18 7.6044",
+    "T. Sidéreo Aparente (h m s)": "7 18 7.9790",
+    "Ec. Equinoccios (E0​)": "0.3746",
+    "Fecha": "2026-01-10"
+  },
+  {
+    "id": "0285224b-47a0-4f5f-bcd0-0edea32ac642",
+    "Día": "11",
+    "Día Juliano (246...)": "1051.5",
+    "T. Sidéreo Medio (h m s)": "7 22 4.1597",
+    "T. Sidéreo Aparente (h m s)": "7 22 4.5318",
+    "Ec. Equinoccios (E0​)": "0.3721",
+    "Fecha": "2026-01-11"
+  },
+  {
+    "id": "8e4665f7-8b2c-48a0-9c63-8b488db74d3f",
+    "Día": "12",
+    "Día Juliano (246...)": "1052.5",
+    "T. Sidéreo Medio (h m s)": "7 26 .7151",
+    "T. Sidéreo Aparente (h m s)": "7 26 1.0866",
+    "Ec. Equinoccios (E0​)": "0.3715",
+    "Fecha": "2026-01-12"
+  },
+  {
+    "id": "409c80ea-704c-4ad5-8131-4cee598fbaf6",
+    "Día": "13",
+    "Día Juliano (246...)": "1053.5",
+    "T. Sidéreo Medio (h m s)": "7 29 57.2705",
+    "T. Sidéreo Aparente (h m s)": "7 29 57.6439",
+    "Ec. Equinoccios (E0​)": "0.3734",
+    "Fecha": "2026-01-13"
+  },
+  {
+    "id": "60dcc6a7-ec41-491c-a1d6-9551c5b9d48f",
+    "Día": "14",
+    "Día Juliano (246...)": "1054.5",
+    "T. Sidéreo Medio (h m s)": "7 33 53.8258",
+    "T. Sidéreo Aparente (h m s)": "7 33 54.2034",
+    "Ec. Equinoccios (E0​)": "0.3776",
+    "Fecha": "2026-01-14"
+  },
+  {
+    "id": "baf6a0f2-e043-407b-9da4-30e770049cb0",
+    "Día": "15",
+    "Día Juliano (246...)": "1055.5",
+    "T. Sidéreo Medio (h m s)": "7 37 50.3812",
+    "T. Sidéreo Aparente (h m s)": "7 37 50.7651",
+    "Ec. Equinoccios (E0​)": "0.3839",
+    "Fecha": "2026-01-15"
+  },
+  {
+    "id": "5f9a25a8-c46a-4fdd-bfb7-5e12256e77b9",
+    "Día": "16",
+    "Día Juliano (246...)": "1056.5",
+    "T. Sidéreo Medio (h m s)": "7 41 46.9366",
+    "T. Sidéreo Aparente (h m s)": "7 41 47.3283",
+    "Ec. Equinoccios (E0​)": "0.3917",
+    "Fecha": "2026-01-16"
+  },
+  {
+    "id": "a7465352-e67b-4907-ab62-be31d6265182",
+    "Día": "17",
+    "Día Juliano (246...)": "1057.5",
+    "T. Sidéreo Medio (h m s)": "7 45 43.4920",
+    "T. Sidéreo Aparente (h m s)": "7 45 43.8920",
+    "Ec. Equinoccios (E0​)": "0.4",
+    "Fecha": "2026-01-17"
+  },
+  {
+    "id": "97f2f1d3-a8a8-40db-964d-e6cfaa47332e",
+    "Día": "18",
+    "Día Juliano (246...)": "1058.5",
+    "T. Sidéreo Medio (h m s)": "7 49 40.0473",
+    "T. Sidéreo Aparente (h m s)": "7 49 40.4551",
+    "Ec. Equinoccios (E0​)": "0.4078",
+    "Fecha": "2026-01-18"
+  },
+  {
+    "id": "b6e5fe5a-9534-4365-ba50-c53a08cad125",
+    "Día": "19",
+    "Día Juliano (246...)": "1059.5",
+    "T. Sidéreo Medio (h m s)": "7 53 36.6027",
+    "T. Sidéreo Aparente (h m s)": "7 53 37.0166",
+    "Ec. Equinoccios (E0​)": "0.4139",
+    "Fecha": "2026-01-19"
+  },
+  {
+    "id": "d09f6ab9-e13c-4d06-a192-0788fb5b5ebe",
+    "Día": "20",
+    "Día Juliano (246...)": "1060.5",
+    "T. Sidéreo Medio (h m s)": "7 57 33.1581",
+    "T. Sidéreo Aparente (h m s)": "7 57 33.5757",
+    "Ec. Equinoccios (E0​)": "0.4176",
+    "Fecha": "2026-01-20"
+  },
+  {
+    "id": "14a15ca7-e001-4e63-b49f-4cb9a40515a0",
+    "Día": "21",
+    "Día Juliano (246...)": "1061.5",
+    "T. Sidéreo Medio (h m s)": "8 1 29.7134",
+    "T. Sidéreo Aparente (h m s)": "8 1 30.1316",
+    "Ec. Equinoccios (E0​)": "0.4182",
+    "Fecha": "2026-01-21"
+  },
+  {
+    "id": "cdfe3fbe-dae6-4364-a8ea-e2f2dbefd07b",
+    "Día": "22",
+    "Día Juliano (246...)": "1062.5",
+    "T. Sidéreo Medio (h m s)": "8 5 26.2688",
+    "T. Sidéreo Aparente (h m s)": "8 5 26.6848",
+    "Ec. Equinoccios (E0​)": "0.416",
+    "Fecha": "2026-01-22"
+  },
+  {
+    "id": "caf749fe-a1a8-4710-90f8-c3dc9408992f",
+    "Día": "23",
+    "Día Juliano (246...)": "1063.5",
+    "T. Sidéreo Medio (h m s)": "8 9 22.8242",
+    "T. Sidéreo Aparente (h m s)": "8 9 23.2358",
+    "Ec. Equinoccios (E0​)": "0.4116",
+    "Fecha": "2026-01-23"
+  },
+  {
+    "id": "974ca480-cd87-422d-9d3b-11de0111da16",
+    "Día": "24",
+    "Día Juliano (246...)": "1064.5",
+    "T. Sidéreo Medio (h m s)": "8 13 19.3795",
+    "T. Sidéreo Aparente (h m s)": "8 13 19.7859",
+    "Ec. Equinoccios (E0​)": "0.4064",
+    "Fecha": "2026-01-24"
+  },
+  {
+    "id": "7790762b-f847-43f4-abdc-2c0a5adf1e69",
+    "Día": "25",
+    "Día Juliano (246...)": "1065.5",
+    "T. Sidéreo Medio (h m s)": "8 17 15.9349",
+    "T. Sidéreo Aparente (h m s)": "8 17 16.3368",
+    "Ec. Equinoccios (E0​)": "0.4019",
+    "Fecha": "2026-01-25"
+  },
+  {
+    "id": "1d1611b5-d8fe-4534-98f8-25acd902febc",
+    "Día": "26",
+    "Día Juliano (246...)": "1066.5",
+    "T. Sidéreo Medio (h m s)": "8 21 12.4903",
+    "T. Sidéreo Aparente (h m s)": "8 21 12.8903",
+    "Ec. Equinoccios (E0​)": "0.4",
+    "Fecha": "2026-01-26"
+  },
+  {
+    "id": "f4e5ef35-83ac-4b4d-a067-6d167e6fcbaf",
+    "Día": "27",
+    "Día Juliano (246...)": "1067.5",
+    "T. Sidéreo Medio (h m s)": "8 25 9.0456",
+    "T. Sidéreo Aparente (h m s)": "8 25 9.4473",
+    "Ec. Equinoccios (E0​)": "0.4017",
+    "Fecha": "2026-01-27"
+  },
+  {
+    "id": "16e554c5-8371-4070-b5cf-51747392be1f",
+    "Día": "28",
+    "Día Juliano (246...)": "1068.5",
+    "T. Sidéreo Medio (h m s)": "8 29 5.6010",
+    "T. Sidéreo Aparente (h m s)": "8 29 6.0085",
+    "Ec. Equinoccios (E0​)": "0.4075",
+    "Fecha": "2026-01-28"
+  },
+  {
+    "id": "892c351f-fe50-48b0-a6cf-95e362edc8fd",
+    "Día": "29",
+    "Día Juliano (246...)": "1069.5",
+    "T. Sidéreo Medio (h m s)": "8 33 2.1564",
+    "T. Sidéreo Aparente (h m s)": "8 33 2.5732",
+    "Ec. Equinoccios (E0​)": "0.4168",
+    "Fecha": "2026-01-29"
+  },
+  {
+    "id": "8b0bbcd7-8e9e-46eb-b401-c64105e49793",
+    "Día": "30",
+    "Día Juliano (246...)": "1070.5",
+    "T. Sidéreo Medio (h m s)": "8 36 58.7118",
+    "T. Sidéreo Aparente (h m s)": "8 36 59.1397",
+    "Ec. Equinoccios (E0​)": "0.4279",
+    "Fecha": "2026-01-30"
+  },
+  {
+    "id": "85897a2b-04e0-48af-96a1-2873eeb9ae92",
+    "Día": "31",
+    "Día Juliano (246...)": "1071.5",
+    "T. Sidéreo Medio (h m s)": "8 40 55.2671",
+    "T. Sidéreo Aparente (h m s)": "8 40 55.7057",
+    "Ec. Equinoccios (E0​)": "0.4386",
+    "Fecha": "2026-01-31"
+  }
+]
