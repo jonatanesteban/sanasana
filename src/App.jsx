@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Home, Clock, Menu, Star, BookOpen, Calculator, Sun } from 'lucide-react'
+import { Home, Clock, Menu, Star, BookOpen, Calculator, Sun, Globe } from 'lucide-react'
 import Inicio from './pages/Inicio'
 import TiempoSidereo from './pages/TiempoSidereo'
 import PosicionEstrellas from './pages/PosicionEstrellas'
 import Unidad3 from './pages/Unidad3'
 import Unidad4 from './pages/Unidad4'
 import CalculoSol from './pages/CalculoSol'
+import SimuladorEsfera from './pages/SimuladorEsfera'
 import FormulasCalculos from './pages/FormulasCalculos'
 import './App.css'
 
@@ -56,6 +57,14 @@ function App() {
           </button>
 
           <button 
+            className={`nav-btn ${activePage === 'esfera' ? 'active' : ''}`}
+            onClick={() => { setActivePage('esfera'); setIsMobileMenuOpen(false); }}
+          >
+            <Globe size={20} />
+            <span>Simulador Esfera</span>
+          </button>
+
+          <button 
             className={`nav-btn ${activePage === 'unidad3' ? 'active' : ''}`}
             onClick={() => { setActivePage('unidad3'); setIsMobileMenuOpen(false); }}
           >
@@ -94,6 +103,7 @@ function App() {
         {activePage === 'inicio' && <Inicio />}
         {activePage === 'tiemposidereo' && <TiempoSidereo />}
         {activePage === 'estrellas' && <PosicionEstrellas />}
+        {activePage === 'esfera' && <SimuladorEsfera />}
         {activePage === 'unidad3' && <Unidad3 />}
         {activePage === 'unidad4' && <Unidad4 />}
         {activePage === 'sol' && <CalculoSol />}
