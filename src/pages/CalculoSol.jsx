@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon } from 'lucide-react';
+import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon, Navigation } from 'lucide-react';
 
 export default function CalculoSol() {
   const [lat, setLat] = useState({ d: '-34', m: '0', s: '0' });
@@ -10,6 +10,7 @@ export default function CalculoSol() {
 
   const [resHv, setResHv] = useState(null);
   const [resFinal, setResFinal] = useState(null);
+  const [resVertical, setResVertical] = useState(null);
 
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -75,15 +76,40 @@ export default function CalculoSol() {
     });
   };
 
+  const calcularVertical = () => {
+    const phiDec = dmsToDec(lat.d, lat.m, lat.s);
+    const decDec = dmsToDec(dec.d, dec.m, dec.s);
+    const phiRad = toRad(phiDec);
+    const decRad = toRad(decDec);
+
+    const cosZ = Math.sin(decRad) / Math.sin(phiRad);
+    
+    if (Math.abs(cosZ) > 1) {
+      setResVertical({ error: 'El astro no pasa por el Primer Vertical' });
+      return;
+    }
+
+    const zRad = Math.acos(cosZ);
+    const zDec = toDeg(zRad);
+    const hDec = 90 - zDec;
+
+    setResVertical({
+      z: zDec,
+      h: hDec,
+      steps: [
+        { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', d: `sen(${decDec.toFixed(2)}) / sen(${phiDec.toFixed(2)}) = ${cosZ.toFixed(6)}`, v: formatDMS(zDec) },
+        { t: '2. Altura (h)', f: 'h = 90° - z', d: `90° - ${zDec.toFixed(2)}°`, v: formatDMS(hDec) }
+      ]
+    });
+  };
+
   const calcularTiempos = (hvManual) => {
     const hvUse = hvManual !== undefined ? hvManual : (resHv ? resHv.h : 0);
     const etDec = (parseFloat(et.m || 0) / 60 + parseFloat(et.s || 0) / 3600) * (et.signo === '-' ? -1 : 1);
     const lambdaDec = dmsToDec(longitud.d, longitud.m, longitud.s);
     const husoVal = parseFloat(huso);
 
-    // Hv -> TU / HOA
     let tv = hvUse;
-    // Si es culminación (Hv=0), usamos base 24h
     if (tv === 0) tv = 24;
 
     const tm = tv - etDec;
@@ -141,9 +167,14 @@ export default function CalculoSol() {
               </div>
             </div>
 
-            <button className="btn-primary" onClick={calcularHv} style={{ padding: '0.8rem' }}>
-              Calcular Datos del Día (Salida/Puesta)
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button className="btn-primary" style={{ flex: 1, minWidth: '200px' }} onClick={calcularHv}>
+                Calcular Salida/Puesta y Duración
+              </button>
+              <button className="btn-primary" style={{ flex: 1, minWidth: '200px', background: 'var(--accent-color)', color: 'black' }} onClick={calcularVertical}>
+                Paso por el Primer Vertical
+              </button>
+            </div>
 
             {resHv && (
               <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
@@ -176,6 +207,30 @@ export default function CalculoSol() {
                       <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resHv.h)}>
                         Usar H Salida (E)
                       </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {resVertical && (
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+                {resVertical.error ? (
+                  <div style={{ color: 'red' }}>{resVertical.error}</div>
+                ) : (
+                  <>
+                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', fontSize: '0.9rem' }}>Paso por el Primer Vertical</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>Cenital (z): {formatDMS(resVertical.z)}</div>
+                      <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {resVertical.steps.map((s, i) => (
+                        <div key={i} style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>{s.t}:</span>
+                          <span style={{ fontWeight: 'bold' }}>{s.v}</span>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}
@@ -266,15 +321,15 @@ export default function CalculoSol() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', fontSize: '0.85rem' }}>
           <div>
             <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>1. Salida/Puesta</p>
-            <p style={{ color: 'var(--text-muted)' }}>Calcula el Ángulo Horario (H). Úsalo en el bloque derecho para obtener la hora del reloj (HOA).</p>
+            <p style={{ color: 'var(--text-muted)' }}>Calcula H, Az y duraciones. Úsalo en el bloque derecho para obtener la hora del reloj (HOA).</p>
           </div>
           <div>
             <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>2. Culminación</p>
-            <p style={{ color: 'var(--text-muted)' }}>Presiona el botón verde. Automáticamente usará Hv=24h (0h) para darte el mediodía oficial.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Hv=24h (0h). Es el mediodía oficial.</p>
           </div>
           <div>
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Duración</p>
-            <p style={{ color: 'var(--text-muted)' }}>El sistema calcula automáticamente cuánto dura el día y la noche basándose en el ángulo horario H.</p>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Vertical</p>
+            <p style={{ color: 'var(--text-muted)' }}>El Sol corta la línea E-O. Calculamos su distancia cenital (z) y altura (h) en ese instante.</p>
           </div>
         </div>
       </footer>
