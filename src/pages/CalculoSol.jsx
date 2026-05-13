@@ -41,8 +41,11 @@ export default function CalculoSol() {
   };
 
   const calcularHv = () => {
-    const phiRad = toRad(dmsToDec(lat.d, lat.m, lat.s));
-    const decRad = toRad(dmsToDec(dec.d, dec.m, dec.s));
+    const phiDec = dmsToDec(lat.d, lat.m, lat.s);
+    const decDec = dmsToDec(dec.d, dec.m, dec.s);
+    const phiRad = toRad(phiDec);
+    const decRad = toRad(decDec);
+
     const cosH = -(Math.tan(phiRad) * Math.tan(decRad));
     
     if (cosH > 1 || cosH < -1) {
@@ -56,14 +59,19 @@ export default function CalculoSol() {
     const azW = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
     const azE = 360 - azW;
 
+    const durDia = hHoras * 2;
+    const durNoche = 24 - durDia;
+
     setResHv({
       h: hHoras, azW, azE, hDeg, 
-      durDia: hHoras * 2, durNoche: 24 - (hHoras * 2),
+      durDia, durNoche,
       steps: [
-        { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', v: cosH.toFixed(6) },
-        { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H)', v: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` },
-        { t: '3. Azimut Puesta (W)', f: 'cos Az = -(sen δ / cos φ)', v: formatDMS(azW) },
-        { t: '4. Azimut Salida (E)', f: '360° - Az(W)', v: formatDMS(azE) }
+        { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', d: `-tan(${phiDec.toFixed(4)}) · tan(${decDec.toFixed(4)})`, v: cosH.toFixed(6) },
+        { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H) / 15', d: `arccos(${cosH.toFixed(6)}) / 15`, v: `${hHoras.toFixed(4)}h` },
+        { t: '3. Azimut Puesta (W)', f: 'cos Az = -(sen δ / cos φ)', d: `-(sen(${decDec.toFixed(4)}) / cos(${phiDec.toFixed(4)}))`, v: formatDMS(azW) },
+        { t: '4. Azimut Salida (E)', f: 'Az(E) = 360° - Az(W)', d: `360 - ${azW.toFixed(2)}`, v: formatDMS(azE) },
+        { t: '5. Duración del Día', f: 'D = 2 × H', d: `2 × ${hHoras.toFixed(4)}`, v: formatH(durDia) },
+        { t: '6. Duración de la Noche', f: 'N = 24 - D', d: `24 - ${durDia.toFixed(4)}`, v: formatH(durNoche) }
       ]
     });
     setResHvTime(null);
@@ -89,9 +97,9 @@ export default function CalculoSol() {
     setResVertical({
       z: zDec, h: 90 - zDec, hAng: hAngHoras,
       steps: [
-        { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', v: formatDMS(zDec) },
-        { t: '2. Altura (h)', f: 'h = 90° - z', v: formatDMS(90 - zDec) },
-        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', v: `${hAngHoras.toFixed(4)}h` }
+        { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', d: `sen(${decDec.toFixed(4)}) / sen(${phiDec.toFixed(4)})`, v: formatDMS(zDec) },
+        { t: '2. Altura (h)', f: 'h = 90° - z', d: `90 - ${zDec.toFixed(4)}`, v: formatDMS(90 - zDec) },
+        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', d: `tan(${decDec.toFixed(4)}) / tan(${phiDec.toFixed(4)})`, v: `${hAngHoras.toFixed(4)}h` }
       ]
     });
     setResVerticalTime(null);
@@ -177,6 +185,19 @@ export default function CalculoSol() {
                 <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Día: {formatH(resHv.durDia)}</div>
                 <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Noche: {formatH(resHv.durNoche)}</div>
               </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                {resHv.steps.map((s, i) => (
+                  <div key={i} style={{ fontSize: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{s.t} ({s.f})</span>
+                      <span style={{ fontWeight: 'bold' }}>{s.v}</span>
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{s.d}</div>
+                  </div>
+                ))}
+              </div>
+
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                 <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#ef4444' }} onClick={() => setResHvTime(transformarTiempo(resHv.h, 'Puesta'))}>Transformar Puesta</button>
                 <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#10b981' }} onClick={() => setResHvTime(transformarTiempo(24 - resHv.h, 'Salida'))}>Transformar Salida</button>
@@ -188,8 +209,11 @@ export default function CalculoSol() {
                     <span>TU: {resHvTime.tu}</span>
                   </div>
                   {resHvTime.steps.map((s, i) => (
-                    <div key={i} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
-                      <span>{s.t}:</span><span>{s.v}</span>
+                    <div key={i} style={{ fontSize: '0.75rem', marginBottom: '0.3rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{s.t}:</span><span>{s.v}</span>
+                      </div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.6, fontFamily: 'monospace' }}>{s.d}</div>
                     </div>
                   ))}
                 </div>
@@ -209,6 +233,19 @@ export default function CalculoSol() {
                 <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
                 <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                {resVertical.steps.map((s, i) => (
+                  <div key={i} style={{ fontSize: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{s.t} ({s.f})</span>
+                      <span style={{ fontWeight: 'bold' }}>{s.v}</span>
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{s.d}</div>
+                  </div>
+                ))}
+              </div>
+
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                 <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#ef4444' }} onClick={() => setResVerticalTime(transformarTiempo(resVertical.hAng, 'Vertical W'))}>Transformar Oeste</button>
                 <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#10b981' }} onClick={() => setResVerticalTime(transformarTiempo(24 - resVertical.hAng, 'Vertical E'))}>Transformar Este</button>
@@ -220,8 +257,11 @@ export default function CalculoSol() {
                     <span>TU: {resVerticalTime.tu}</span>
                   </div>
                   {resVerticalTime.steps.map((s, i) => (
-                    <div key={i} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
-                      <span>{s.t}:</span><span>{s.v}</span>
+                    <div key={i} style={{ fontSize: '0.75rem', marginBottom: '0.3rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{s.t}:</span><span>{s.v}</span>
+                      </div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.6, fontFamily: 'monospace' }}>{s.d}</div>
                     </div>
                   ))}
                 </div>
@@ -287,6 +327,7 @@ export default function CalculoSol() {
                       <span style={{ color: 'var(--text-muted)' }}>{s.t}:</span>
                       <span style={{ fontWeight: 'bold' }}>{s.v}</span>
                     </div>
+                    <div style={{ fontSize: '0.65rem', opacity: 0.6, fontFamily: 'monospace' }}>{s.d}</div>
                   </div>
                 ))}
               </div>
