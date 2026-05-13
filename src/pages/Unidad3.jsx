@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Calculator, ArrowRight, MapPin, Star, Clock, RefreshCw, Info, ChevronRight } from 'lucide-react';
+import { BookOpen, Calculator, ArrowRight, MapPin, Star, Clock, RefreshCw, Info, ChevronRight, HelpCircle } from 'lucide-react';
 
 export default function Unidad3() {
   const [modo, setModo] = useState('ecu_to_hor'); // 'ecu_to_hor', 'hor_to_ecu', 'especiales'
@@ -152,14 +152,42 @@ export default function Unidad3() {
                 </div>
 
                 {casoEspecial === 'culminacion' && (
-                  <div className="form-group">
-                    <label>Tipo de Culminación</label>
-                    <select className="form-input" value={subCaso} onChange={e => setSubCaso(e.target.value)}>
-                      <option value="superior_norte">Superior al Norte del Cenit</option>
-                      <option value="inferior_norte">Inferior al Norte del Cenit</option>
-                      <option value="superior_sur">Superior al Sur del Cenit</option>
-                      <option value="inferior_sur">Inferior al Sur del Cenit</option>
-                    </select>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group">
+                      <label>Tipo de Culminación</label>
+                      <select className="form-input" value={subCaso} onChange={e => setSubCaso(e.target.value)}>
+                        <option value="superior_norte">Superior al Norte del Cenit</option>
+                        <option value="inferior_norte">Inferior al Norte del Cenit</option>
+                        <option value="superior_sur">Superior al Sur del Cenit</option>
+                        <option value="inferior_sur">Inferior al Sur del Cenit</option>
+                      </select>
+                    </div>
+
+                    {/* NUEVO: BLOQUE DE AYUDA PARA SELECCIÓN */}
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>
+                      <h5 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <HelpCircle size={14} /> ¿Cuál elegir?
+                      </h5>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <p style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>1. Momento:</p>
+                          <ul style={{ paddingLeft: '1rem', color: 'var(--text-muted)' }}>
+                            <li><strong>Superior:</strong> Punto más alto (H=0h)</li>
+                            <li><strong>Inferior:</strong> Punto más bajo (H=12h)</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>2. Posición:</p>
+                          <ul style={{ paddingLeft: '1rem', color: 'var(--text-muted)' }}>
+                            <li><strong>Norte:</strong> Si δ &gt; φ</li>
+                            <li><strong>Sur:</strong> Si δ &lt; φ</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
+                        * Recuerda respetar los signos. Ej: -10° es mayor que -34°.
+                      </p>
+                    </div>
                   </div>
                 )}
 
