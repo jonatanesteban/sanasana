@@ -50,18 +50,20 @@ export default function Unidad4() {
       steps.push({ t: '5. Tiempo Verdadero (Tv / Hv)', f: 'Tm + Et', d: `${tm.toFixed(4)} + (${etDec.toFixed(6)})`, v: formatH(tv) });
       setResSol({ final: formatH(tv), steps });
     } else {
+      // Hv -> TU (Incluye modo Culminación donde Hv=0)
       const tv = valDec;
       const tm = tv - etDec;
       const hcl = tm + 12;
       const difLambdaHuso = (lambdaDec / 15) - husoVal;
       const hoa = hcl - difLambdaHuso;
       const tu = hoa - husoVal;
-      steps.push({ t: '1. Ánulo Horario Verdadero (Hv)', v: formatH(tv) });
+      
+      steps.push({ t: '1. Ángulo Horario Verdadero (Hv)', v: formatH(tv) });
       steps.push({ t: '2. Tiempo Medio (Tm)', f: 'Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) });
       steps.push({ t: '3. Hora Civil Local (HCL)', f: 'Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) });
       steps.push({ t: '4. Hora Oficial (HOA)', f: 'HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) });
       steps.push({ t: '5. Tiempo Universal (TU)', f: 'HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) });
-      setResSol({ final: formatH(tu), steps });
+      setResSol({ final: formatH(hoa), nota: 'Resultado final en Hora Oficial (HOA)', steps });
     }
   };
 
@@ -81,12 +83,20 @@ export default function Unidad4() {
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
           <button 
+            className={`mode-btn ${problemaTipo === 'culminacion_sol' ? 'active' : ''}`}
+            onClick={() => { setProblemaTipo('culminacion_sol'); setModoSol('hv_to_tu'); setInputSol({h:'0', m:'0', s:'0'}); setHuso('-3'); }}
+            style={{ textAlign: 'left', padding: '1rem' }}
+          >
+            <strong>Culminación del Sol</strong>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>El Sol cruza el meridiano. Hv es siempre 0.</div>
+          </button>
+          <button 
             className={`mode-btn ${problemaTipo === 'salida' ? 'active' : ''}`}
             onClick={() => { setProblemaTipo('salida'); setModoSol('hv_to_tu'); }}
             style={{ textAlign: 'left', padding: '1rem' }}
           >
             <strong>Salida/Puesta del Sol</strong>
-            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Tengo latitud/declinación y quiero saber la hora (TU).</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Hv es el valor H calculado en la Unidad 3.</div>
           </button>
           <button 
             className={`mode-btn ${problemaTipo === 'hora_hv' ? 'active' : ''}`}
@@ -94,28 +104,21 @@ export default function Unidad4() {
             style={{ textAlign: 'left', padding: '1rem' }}
           >
             <strong>Posición del Sol</strong>
-            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Tengo la hora del reloj y quiero saber el ángulo horario (Hv).</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Tengo la hora del reloj y quiero saber el Hv.</div>
           </button>
         </div>
 
-        {problemaTipo === 'salida' && (
-          <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--primary-color)' }}>
-            <h4 style={{ fontSize: '0.9rem', color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <HelpCircle size={16} /> Estrategia Sugerida:
+        {problemaTipo === 'culminacion_sol' && (
+          <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--accent-color)' }}>
+            <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sun size={16} /> Estrategia: Culminación Solar
             </h4>
             <div style={{ fontSize: '0.85rem', lineHeight: '1.6' }}>
-              <ol style={{ paddingLeft: '1.2rem' }}>
-                <li>
-                  Ve a la <strong>Unidad 3 ➔ Casos Especiales ➔ Salida/Puesta</strong>. 
-                  Calcula el valor de <strong>H</strong> (arco semidiurno).
-                </li>
-                <li>
-                  <strong>Tip de Oro:</strong> Ese valor de H es exactamente tu <strong>Hv</strong> (Ángulo Horario Verdadero).
-                </li>
-                <li>
-                  Ingresa ese <strong>Hv</strong> en la calculadora de abajo, busca la <strong>Et</strong> en el SANA y obtendrás el <strong>TU</strong>.
-                </li>
-              </ol>
+              <ul style={{ paddingLeft: '1.2rem' }}>
+                <li><strong>Dato Clave:</strong> En culminación, <strong>Hv = 00:00:00</strong> (ya está cargado abajo).</li>
+                <li>Busca la <strong>Et</strong> en el SANA (columna 0h) e ingrésala con su signo.</li>
+                <li>El cálculo te dará la <strong>Hora Oficial (HOA)</strong> exacta del mediodía solar.</li>
+              </ul>
             </div>
           </div>
         )}
@@ -128,7 +131,7 @@ export default function Unidad4() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {modoSol === 'tu_to_hv' ? <Clock color="var(--primary-color)" /> : <Sun color="var(--primary-color)" />}
-                {modoSol === 'tu_to_hv' ? 'Transformación: TU ➔ Hv' : 'Transformación: Hv ➔ TU'}
+                {problemaTipo === 'culminacion_sol' ? 'Culminación del Sol' : (modoSol === 'tu_to_hv' ? 'Transformación: TU ➔ Hv' : 'Transformación: Hv ➔ TU')}
               </h3>
               <div className="mode-selector" style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', padding: '0.25rem' }}>
                 <button className={`mode-btn ${modoSol === 'tu_to_hv' ? 'active' : ''}`} onClick={() => setModoSol('tu_to_hv')}>TU ➔ Hv</button>
@@ -140,13 +143,11 @@ export default function Unidad4() {
               <div className="form-group">
                 <label>{modoSol === 'tu_to_hv' ? 'Tiempo Universal (TU)' : 'Ángulo Horario Verdadero (Hv)'}</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="number" className="form-input" placeholder="h" value={inputSol.h} onChange={e => setInputSol({...inputSol, h: e.target.value})} />
-                  <input type="number" className="form-input" placeholder="m" value={inputSol.m} onChange={e => setInputSol({...inputSol, m: e.target.value})} />
-                  <input type="number" className="form-input" placeholder="s" value={inputSol.s} onChange={e => setInputSol({...inputSol, s: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="h" value={inputSol.h} onChange={e => setInputSol({...inputSol, h: e.target.value})} disabled={problemaTipo === 'culminacion_sol'} />
+                  <input type="number" className="form-input" placeholder="m" value={inputSol.m} onChange={e => setInputSol({...inputSol, m: e.target.value})} disabled={problemaTipo === 'culminacion_sol'} />
+                  <input type="number" className="form-input" placeholder="s" value={inputSol.s} onChange={e => setInputSol({...inputSol, s: e.target.value})} disabled={problemaTipo === 'culminacion_sol'} />
                 </div>
-                {problemaTipo === 'salida' && modoSol === 'hv_to_tu' && (
-                  <span style={{ fontSize: '0.7rem', color: 'var(--primary-color)', marginTop: '0.25rem' }}>* Aquí va el valor H que calculaste en la Unidad 3</span>
-                )}
+                {problemaTipo === 'culminacion_sol' && <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>* Hv fijo en 0 para culminación</span>}
               </div>
               <div className="form-group">
                 <label>Ecuación del Tiempo (Et del SANA)</label>
@@ -181,14 +182,15 @@ export default function Unidad4() {
             </div>
 
             <button className="btn-primary" onClick={calcularSol} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Calculator size={18} /> Calcular Transformación
+              <Calculator size={18} /> Calcular Culminación
             </button>
 
             {resSol && (
               <div style={{ marginTop: '2rem' }}>
-                <div className="result-badge" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-                  {modoSol === 'tu_to_hv' ? 'Hv Final = ' : 'TU Final = '} {resSol.final}
+                <div className="result-badge" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', borderColor: 'var(--accent-color)' }}>
+                  {problemaTipo === 'culminacion_sol' ? 'Culminación (HOA) = ' : (modoSol === 'tu_to_hv' ? 'Hv Final = ' : 'TU Final = ')} {resSol.final}
                 </div>
+                {resSol.nota && <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1rem' }}>{resSol.nota}</p>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {resSol.steps.map((s, i) => (
                     <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--primary-color)' }}>
@@ -206,35 +208,26 @@ export default function Unidad4() {
         </div>
 
         <aside>
+          {/* ... mantener el contenido del aside ... */}
           <div className="glass-panel" style={{ height: '100%', borderLeft: '3px solid var(--accent-color)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
               <Info color="var(--accent-color)" size={20} /> Tips de Problemas
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.85rem' }}>
-              
               <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
-                <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Sun size={16} /> Salida/Puesta
+                <h4 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Sun size={16} /> Culminación del Sol
                 </h4>
                 <p style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  En problemas de salida y puesta, el valor de <strong>H</strong> que obtienes es el <strong>Hv</strong>.
+                  Cuando el Sol culmina, está en el meridiano local. Por eso <strong>Hv = 0h</strong>.
                 </p>
               </div>
-
               <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
                 <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <HelpCircle size={16} /> ¿Qué datos tengo?
+                  <HelpCircle size={16} /> Et en SANA
                 </h4>
-                <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <li><strong>φ y δ:</strong> Calcula H en Unidad 3.</li>
-                  <li><strong>TU y Huso:</strong> Calcula HOA y HCL.</li>
-                  <li><strong>Hv y Et:</strong> Calcula el Tiempo Medio (Tm).</li>
-                </ul>
-              </div>
-
-              <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  Selecciona una opción en el asistente para ver la guía paso a paso de resolución.
+                <p style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  Usa el valor de la columna <strong>0h</strong> de la Ecuación del Tiempo para mayor precisión en la culminación.
                 </p>
               </div>
             </div>
