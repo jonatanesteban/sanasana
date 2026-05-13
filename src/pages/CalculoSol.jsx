@@ -54,7 +54,6 @@ export default function CalculoSol() {
     const azW = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
     const azE = 360 - azW;
 
-    // Duraciones
     const durDia = hHoras * 2;
     const durNoche = 24 - durDia;
 
@@ -83,22 +82,25 @@ export default function CalculoSol() {
     const decRad = toRad(decDec);
 
     const cosZ = Math.sin(decRad) / Math.sin(phiRad);
+    const cosH = Math.tan(decRad) / Math.tan(phiRad);
     
-    if (Math.abs(cosZ) > 1) {
+    if (Math.abs(cosZ) > 1 || Math.abs(cosH) > 1) {
       setResVertical({ error: 'El astro no pasa por el Primer Vertical' });
       return;
     }
 
-    const zRad = Math.acos(cosZ);
-    const zDec = toDeg(zRad);
-    const hDec = 90 - zDec;
+    const zDec = toDeg(Math.acos(cosZ));
+    const hAngDeg = toDeg(Math.acos(cosH));
+    const hAngHoras = hAngDeg / 15;
 
     setResVertical({
       z: zDec,
-      h: hDec,
+      h: 90 - zDec,
+      hAng: hAngHoras,
       steps: [
         { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', d: `sen(${decDec.toFixed(2)}) / sen(${phiDec.toFixed(2)}) = ${cosZ.toFixed(6)}`, v: formatDMS(zDec) },
-        { t: '2. Altura (h)', f: 'h = 90° - z', d: `90° - ${zDec.toFixed(2)}°`, v: formatDMS(hDec) }
+        { t: '2. Altura (h)', f: 'h = 90° - z', d: `90° - ${zDec.toFixed(2)}°`, v: formatDMS(90 - zDec) },
+        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', d: `tan(${decDec.toFixed(2)}) / tan(${phiDec.toFixed(2)}) = ${cosH.toFixed(6)}`, v: `${hAngHoras.toFixed(4)}h` }
       ]
     });
   };
@@ -221,6 +223,10 @@ export default function CalculoSol() {
                   <>
                     <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', fontSize: '0.9rem' }}>Paso por el Primer Vertical</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
+                      <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>Cenital (z): {formatDMS(resVertical.z)}</div>
                       <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
                     </div>
@@ -231,6 +237,14 @@ export default function CalculoSol() {
                           <span style={{ fontWeight: 'bold' }}>{s.v}</span>
                         </div>
                       ))}
+                    </div>
+                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resVertical.hAng)}>
+                        Usar H Oeste (W)
+                      </button>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resVertical.hAng)}>
+                        Usar H Este (E)
+                      </button>
                     </div>
                   </>
                 )}
@@ -329,7 +343,7 @@ export default function CalculoSol() {
           </div>
           <div>
             <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Vertical</p>
-            <p style={{ color: 'var(--text-muted)' }}>El Sol corta la línea E-O. Calculamos su distancia cenital (z) y altura (h) en ese instante.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Calculamos z, h y también el tiempo (H) en que el Sol corta la línea E-O.</p>
           </div>
         </div>
       </footer>
