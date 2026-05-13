@@ -112,6 +112,7 @@ export default function CalculoSol() {
     return {
       hoa: formatH(hoa),
       tu: formatH(tu),
+      context: context,
       steps: [
         { t: `Hm/Tm`, f: 'Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) },
         { t: `HCL`, f: 'Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) },
@@ -169,8 +170,10 @@ export default function CalculoSol() {
                 <Target size={18} /> Resultados de Salida y Puesta
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta: {formatH(resHv.h)}</div>
-                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida: {formatH(24 - resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {formatDMS(resHv.azW)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {formatDMS(resHv.azE)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta (W): {formatH(resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida (E): {formatH(24 - resHv.h)}</div>
                 <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Día: {formatH(resHv.durDia)}</div>
                 <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Noche: {formatH(resHv.durNoche)}</div>
               </div>
@@ -201,8 +204,10 @@ export default function CalculoSol() {
                 <Navigation size={18} /> Resultados del Primer Vertical
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste: {formatH(resVertical.hAng)}</div>
-                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este: {formatH(24 - resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>Cenital (z): {formatDMS(resVertical.z)}</div>
+                <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
                 <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#ef4444' }} onClick={() => setResVerticalTime(transformarTiempo(resVertical.hAng, 'Vertical W'))}>Transformar Oeste</button>
