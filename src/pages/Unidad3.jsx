@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Calculator, ArrowRight, MapPin, Star, Clock, RefreshCw, Info, ChevronRight, HelpCircle } from 'lucide-react';
+import { BookOpen, Calculator, ArrowRight, MapPin, Star, Clock, RefreshCw, Info, ChevronRight, HelpCircle, Sun } from 'lucide-react';
 
 export default function Unidad3() {
   const [modo, setModo] = useState('ecu_to_hor'); // 'ecu_to_hor', 'hor_to_ecu', 'especiales'
@@ -14,6 +14,7 @@ export default function Unidad3() {
   const [subCaso, setSubCaso] = useState('superior_norte'); // Para culminación
 
   const [desarrollo, setDesarrollo] = useState([]);
+  const [sugerenciaSol, setSugerenciaSol] = useState(false);
 
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -34,6 +35,7 @@ export default function Unidad3() {
     const pasos = [];
     const phiDec = dmsToDec(lat.d, lat.m, lat.s);
     const phiRad = toRad(phiDec);
+    setSugerenciaSol(false);
 
     if (modo === 'ecu_to_hor') {
       const hHorarioDec = dmsToDec(val1.d, val1.m, val1.s);
@@ -114,10 +116,44 @@ export default function Unidad3() {
         pasos.push({ titulo: 'Azimut (Az)', formula: 'Por definición (Primer Vertical)', desarrollo: 'El astro corta la línea E-O', resultado: 'Az = 90° o 270°' });
         pasos.push({ titulo: 'Distancia Cenital (z)', formula: 'cos z = sen δ / sen φ', desarrollo: `sen(${decDec.toFixed(2)}) / sen(${phiDec.toFixed(2)}) = ${cosZ.toFixed(4)}`, resultado: formatDMS(z) });
         pasos.push({ titulo: 'Ángulo Horario (H)', formula: 'cos H = tan δ / tan φ', desarrollo: `tan(${decDec.toFixed(2)}) / tan(${phiDec.toFixed(2)}) = ${cosH.toFixed(4)}`, resultado: `${(h/15).toFixed(4)}h (${h.toFixed(2)}°)` });
+
+      } else if (casoEspecial === 'salida_puesta') {
+        const cosH = -(Math.tan(phiRad) * Math.tan(decRad));
+        pasos.push({ titulo: 'Coseno de H', formula: 'cos H = -tan φ · tan δ', desarrollo: `-tan(${phiDec.toFixed(2)}) · tan(${decDec.toFixed(2)}) = ${cosH.toFixed(6)}`, resultado: cosH.toFixed(6) });
+        
+        if (cosH > 1 || cosH < -1) {
+          pasos.push({ titulo: 'Resultado', formula: 'Visibilidad', desarrollo: 'cos H fuera de rango [-1, 1]', resultado: 'Astro Circumpolar' });
+        } else {
+          const hDeg = toDeg(Math.acos(cosH));
+          const hHoras = hDeg / 15;
+          pasos.push({ titulo: 'Ángulo Horario (H)', formula: 'H = arccos(cos H)', desarrollo: `arccos(${cosH.toFixed(6)}) = ${hDeg.toFixed(4)}°`, resultado: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` });
+          pasos.push({ titulo: 'Puesta / Salida', formula: 'H y 24 - H', desarrollo: `Puesta: ${hHoras.toFixed(4)}h | Salida: ${(24 - hHoras).toFixed(4)}h`, resultado: 'OK' });
+          
+          // ACTIVAR SUGERENCIA DE SOL
+          setSugerenciaSol(true);
+        }
       }
     }
 
     setDesarrollo(pasos);
+  };
+
+  const calcularAzSalida = () => {
+    const phiDec = dmsToDec(lat.d, lat.m, lat.s);
+    const decDec = dmsToDec(val2.d, val2.m, val2.s);
+    const phiRad = toRad(phiDec);
+    const decRad = toRad(decDec);
+    const cosAz = Math.sin(decRad) / Math.cos(phiRad);
+    const az = toDeg(Math.acos(cosAz));
+    
+    const nuevoPaso = { 
+      titulo: 'Azimut de Salida/Puesta (SOL)', 
+      formula: 'cos Az = sen δ / cos φ', 
+      desarrollo: `sen(${decDec.toFixed(2)}) / cos(${phiDec.toFixed(2)}) = ${cosAz.toFixed(6)}`, 
+      resultado: `Az = ${az.toFixed(2)}° (E o W)` 
+    };
+    setDesarrollo([...desarrollo, nuevoPaso]);
+    setSugerenciaSol(false);
   };
 
   return (
@@ -146,6 +182,7 @@ export default function Unidad3() {
                   <label>Seleccionar Situación Especial</label>
                   <select className="form-input" value={casoEspecial} onChange={e => setCasoEspecial(e.target.value)}>
                     <option value="culminacion">Culminación del Astro</option>
+                    <option value="salida_puesta">Salida y Puesta del Astro</option>
                     <option value="elongacion">Máximas Digresiones (Elongación)</option>
                     <option value="vertical">Paso por el Primer Vertical</option>
                   </select>
@@ -184,9 +221,6 @@ export default function Unidad3() {
                           </ul>
                         </div>
                       </div>
-                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-                        * Recuerda respetar los signos. Ej: -10° es mayor que -34°.
-                      </p>
                     </div>
                   </div>
                 )}
@@ -258,6 +292,28 @@ export default function Unidad3() {
                   </div>
                 ))}
               </div>
+
+              {/* SUGERENCIA INTELIGENTE DEL SOL */}
+              {sugerenciaSol && (
+                <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(255, 193, 7, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <Sun color="var(--accent-color)" size={24} />
+                    <div>
+                      <h4 style={{ color: 'var(--accent-color)', marginBottom: '0.25rem', fontSize: '0.95rem' }}>¿Estás calculando el SOL?</h4>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                        Recuerda que en el caso especial del Sol, el <strong>Azimut (Az)</strong> de salida/puesta en el horizonte es fundamental.
+                        Puedes calcularlo con: <code>cos Az = sen δ / cos φ</code>.
+                      </p>
+                      <button 
+                        onClick={calcularAzSalida}
+                        style={{ marginTop: '0.75rem', padding: '0.5rem 1rem', background: 'var(--accent-color)', color: 'black', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                      >
+                        Calcular Azimut del Sol ahora
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -276,21 +332,17 @@ export default function Unidad3() {
                   <p style={{ color: 'var(--text-muted)' }}>Ocurre cuando el astro cruza el meridiano. En la superior el astro está en su punto más alto.</p>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                  <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>Elongación</h4>
-                  <p style={{ color: 'var(--text-muted)' }}>Cuando el paralelo celeste es tangente al vertical del astro. El ángulo paraláctico q es 90°.</p>
+                  <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>Salida / Puesta</h4>
+                  <p style={{ color: 'var(--text-muted)' }}>Cuando el astro corta el horizonte (z = 90°). Se calcula el ángulo horario H.</p>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                  <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>Primer Vertical</h4>
-                  <p style={{ color: 'var(--text-muted)' }}>Cuando el astro corta la línea Este-Oeste. Azimut es 90° o 270°. Condición: |δ| ≤ |φ|.</p>
+                  <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>Elongación</h4>
+                  <p style={{ color: 'var(--text-muted)' }}>Cuando el paralelo celeste es tangente al vertical del astro. q = 90°.</p>
                 </div>
               </div>
             ) : (
               <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                 <p>Usa esta sección para transformaciones generales.</p>
-                <ul style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <li><ChevronRight size={14} inline /> Ingresa H en formato decimal de horas.</li>
-                  <li><ChevronRight size={14} inline /> Latitud y Declinación en grados sexagesimales.</li>
-                </ul>
               </div>
             )}
           </div>
