@@ -105,7 +105,7 @@ export default function CalculoSol() {
     });
   };
 
-  const calcularTiempos = (hvManual) => {
+  const calcularTiempos = (hvManual, context = '') => {
     const hvUse = hvManual !== undefined ? hvManual : (resHv ? resHv.h : 0);
     const etDec = (parseFloat(et.m || 0) / 60 + parseFloat(et.s || 0) / 3600) * (et.signo === '-' ? -1 : 1);
     const lambdaDec = dmsToDec(longitud.d, longitud.m, longitud.s);
@@ -120,15 +120,18 @@ export default function CalculoSol() {
     const hoa = hcl - difLambdaHuso;
     const tu = hoa - husoVal;
 
+    const suffix = context ? ` (${context})` : '';
+
     setResFinal({
       hoa: formatH(hoa),
       tu: formatH(tu),
       esCulminacion: hvUse === 0,
+      context: context,
       steps: [
-        { t: '1. Tiempo Medio (Tm)', f: 'Hv - Et', v: formatH(tm) },
-        { t: '2. Hora Civil Local (HCL)', f: 'Tm + 12h', v: formatH(hcl) },
-        { t: '3. Hora Oficial (HOA)', f: 'HCL - (λ/15 - Huso)', v: formatH(hoa) },
-        { t: '4. Tiempo Universal (TU)', f: 'HOA - Huso', v: formatH(tu) }
+        { t: `1. Tiempo Medio / Hora Media${suffix}`, f: 'Tm = Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) },
+        { t: `2. Hora Civil Local (HCL)${suffix}`, f: 'HCL = Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) },
+        { t: `3. Hora Oficial (HOA)${suffix}`, f: 'HOA = HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) },
+        { t: `4. Tiempo Universal (TU)${suffix}`, f: 'TU = HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) }
       ]
     });
   };
@@ -203,10 +206,10 @@ export default function CalculoSol() {
                       ))}
                     </div>
                     <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resHv.h)}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resHv.h, 'Puesta')}>
                         Usar H Puesta (W)
                       </button>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resHv.h)}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resHv.h, 'Salida')}>
                         Usar H Salida (E)
                       </button>
                     </div>
@@ -239,10 +242,10 @@ export default function CalculoSol() {
                       ))}
                     </div>
                     <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resVertical.hAng)}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resVertical.hAng, 'Vertical W')}>
                         Usar H Oeste (W)
                       </button>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resVertical.hAng)}>
+                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resVertical.hAng, 'Vertical E')}>
                         Usar H Este (E)
                       </button>
                     </div>
@@ -291,10 +294,10 @@ export default function CalculoSol() {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="btn-primary" style={{ flex: 1, background: 'var(--accent-color)', color: 'black' }} onClick={() => calcularTiempos()}>
+              <button className="btn-primary" style={{ flex: 1, background: 'var(--accent-color)', color: 'black' }} onClick={() => calcularTiempos(undefined, 'Entrada')}>
                 Calcular HOA/TU
               </button>
-              <button className="btn-primary" style={{ flex: 1, background: '#10b981' }} onClick={() => calcularTiempos(0)}>
+              <button className="btn-primary" style={{ flex: 1, background: '#10b981' }} onClick={() => calcularTiempos(0, 'Culminación')}>
                 Culminación (Hv=0)
               </button>
             </div>
@@ -317,6 +320,7 @@ export default function CalculoSol() {
                         <span style={{ color: 'var(--text-muted)' }}>{s.t} ({s.f})</span>
                         <span style={{ fontWeight: 'bold' }}>{s.v}</span>
                       </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '0.2rem' }}>{s.d}</div>
                     </div>
                   ))}
                 </div>
