@@ -9,8 +9,10 @@ export default function CalculoSol() {
   const [huso, setHuso] = useState('-3');
 
   const [resHv, setResHv] = useState(null);
-  const [resFinal, setResFinal] = useState(null);
+  const [resFinalGeneral, setResFinalGeneral] = useState(null);
   const [resVertical, setResVertical] = useState(null);
+  const [resVerticalTime, setResVerticalTime] = useState(null);
+  const [resHvTime, setResHvTime] = useState(null);
 
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -54,25 +56,17 @@ export default function CalculoSol() {
     const azW = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
     const azE = 360 - azW;
 
-    const durDia = hHoras * 2;
-    const durNoche = 24 - durDia;
-
     setResHv({
-      h: hHoras,
-      azW: azW,
-      azE: azE,
-      hDeg: hDeg,
-      durDia: durDia,
-      durNoche: durNoche,
+      h: hHoras, azW, azE, hDeg, 
+      durDia: hHoras * 2, durNoche: 24 - (hHoras * 2),
       steps: [
         { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', v: cosH.toFixed(6) },
         { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H)', v: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` },
         { t: '3. Azimut Puesta (W)', f: 'cos Az = -(sen δ / cos φ)', v: formatDMS(azW) },
-        { t: '4. Azimut Salida (E)', f: '360° - Az(W)', v: formatDMS(azE) },
-        { t: '5. Duración del Día', f: 'D = 2 × H', v: formatH(durDia) },
-        { t: '6. Duración de la Noche', f: 'N = 24 - D', v: formatH(durNoche) }
+        { t: '4. Azimut Salida (E)', f: '360° - Az(W)', v: formatDMS(azE) }
       ]
     });
+    setResHvTime(null);
   };
 
   const calcularVertical = () => {
@@ -90,50 +84,41 @@ export default function CalculoSol() {
     }
 
     const zDec = toDeg(Math.acos(cosZ));
-    const hAngDeg = toDeg(Math.acos(cosH));
-    const hAngHoras = hAngDeg / 15;
+    const hAngHoras = toDeg(Math.acos(cosH)) / 15;
 
     setResVertical({
-      z: zDec,
-      h: 90 - zDec,
-      hAng: hAngHoras,
+      z: zDec, h: 90 - zDec, hAng: hAngHoras,
       steps: [
-        { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', d: `sen(${decDec.toFixed(2)}) / sen(${phiDec.toFixed(2)}) = ${cosZ.toFixed(6)}`, v: formatDMS(zDec) },
-        { t: '2. Altura (h)', f: 'h = 90° - z', d: `90° - ${zDec.toFixed(2)}°`, v: formatDMS(90 - zDec) },
-        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', d: `tan(${decDec.toFixed(2)}) / tan(${phiDec.toFixed(2)}) = ${cosH.toFixed(6)}`, v: `${hAngHoras.toFixed(4)}h` }
+        { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', v: formatDMS(zDec) },
+        { t: '2. Altura (h)', f: 'h = 90° - z', v: formatDMS(90 - zDec) },
+        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', v: `${hAngHoras.toFixed(4)}h` }
       ]
     });
+    setResVerticalTime(null);
   };
 
-  const calcularTiempos = (hvManual, context = '') => {
-    const hvUse = hvManual !== undefined ? hvManual : (resHv ? resHv.h : 0);
+  const transformarTiempo = (hv, context) => {
     const etDec = (parseFloat(et.m || 0) / 60 + parseFloat(et.s || 0) / 3600) * (et.signo === '-' ? -1 : 1);
     const lambdaDec = dmsToDec(longitud.d, longitud.m, longitud.s);
     const husoVal = parseFloat(huso);
 
-    let tv = hvUse;
-    if (tv === 0) tv = 24;
-
+    let tv = hv || 24;
     const tm = tv - etDec;
     const hcl = tm + 12;
     const difLambdaHuso = (lambdaDec / 15) - husoVal;
     const hoa = hcl - difLambdaHuso;
     const tu = hoa - husoVal;
 
-    const suffix = context ? ` (${context})` : '';
-
-    setResFinal({
+    return {
       hoa: formatH(hoa),
       tu: formatH(tu),
-      esCulminacion: hvUse === 0,
-      context: context,
       steps: [
-        { t: `1. Tiempo Medio / Hora Media${suffix}`, f: 'Tm = Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) },
-        { t: `2. Hora Civil Local (HCL)${suffix}`, f: 'HCL = Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) },
-        { t: `3. Hora Oficial (HOA)${suffix}`, f: 'HOA = HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) },
-        { t: `4. Tiempo Universal (TU)${suffix}`, f: 'TU = HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) }
+        { t: `Hm/Tm`, f: 'Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) },
+        { t: `HCL`, f: 'Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) },
+        { t: `HOA`, f: 'HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) },
+        { t: `TU`, f: 'HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) }
       ]
-    });
+    };
   };
 
   return (
@@ -147,145 +132,113 @@ export default function CalculoSol() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         
-        {/* BLOQUE 1: DATOS DE ENTRADA Y HV */}
-        <section className="glass-panel">
-          <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <MapPin size={20} color="var(--primary-color)" /> Datos de Ubicación y Astro
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div className="form-group">
-              <label>Latitud (φ)</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input type="number" className="form-input" value={lat.d} onChange={e => setLat({...lat, d: e.target.value})} />
-                <input type="number" className="form-input" value={lat.m} onChange={e => setLat({...lat, m: e.target.value})} />
-                <input type="number" className="form-input" value={lat.s} onChange={e => setLat({...lat, s: e.target.value})} />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Declinación del Sol (δ)</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input type="number" className="form-input" value={dec.d} onChange={e => setDec({...dec, d: e.target.value})} />
-                <input type="number" className="form-input" value={dec.m} onChange={e => setDec({...dec, m: e.target.value})} />
-                <input type="number" className="form-input" value={dec.s} onChange={e => setDec({...dec, s: e.target.value})} />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button className="btn-primary" style={{ flex: 1, minWidth: '200px' }} onClick={calcularHv}>
-                Calcular Salida/Puesta y Duración
-              </button>
-              <button className="btn-primary" style={{ flex: 1, minWidth: '200px', background: 'var(--accent-color)', color: 'black' }} onClick={calcularVertical}>
-                Paso por el Primer Vertical
-              </button>
-            </div>
-
-            {resHv && (
-              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                {resHv.error ? (
-                  <div style={{ color: 'red' }}>{resHv.error}</div>
-                ) : (
-                  <>
-                    <h4 style={{ color: 'var(--primary-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                      <Target size={18} /> Resultados de Salida y Puesta
-                    </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                      <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {resHv && formatDMS(resHv.azW)}</div>
-                      <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {resHv && formatDMS(resHv.azE)}</div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                      <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta (W): {formatH(resHv.h)}</div>
-                      <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida (E): {formatH(24 - resHv.h)}</div>
-                      <div className="result-badge" style={{ borderColor: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' }}>Día: {formatH(resHv.durDia)}</div>
-                      <div className="result-badge" style={{ borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' }}>Noche: {formatH(resHv.durNoche)}</div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {resHv.steps.map((s, i) => (
-                        <div key={i} style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>{s.t}:</span>
-                          <span style={{ fontWeight: 'bold' }}>{s.v}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resHv.h, 'Puesta')}>
-                        Usar H Puesta (W)
-                      </button>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resHv.h, 'Salida')}>
-                        Usar H Salida (E)
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {resVertical && (
-              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
-                {resVertical.error ? (
-                  <div style={{ color: 'red' }}>{resVertical.error}</div>
-                ) : (
-                  <>
-                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                      <Navigation size={18} /> Resultados del Primer Vertical
-                    </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
-                      <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>Cenital (z): {formatDMS(resVertical.z)}</div>
-                      <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {resVertical.steps.map((s, i) => (
-                        <div key={i} style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <span style={{ color: 'var(--text-muted)' }}>{s.t}:</span>
-                          <span style={{ fontWeight: 'bold' }}>{s.v}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resVertical.hAng, 'Vertical W')}>
-                        Usar H Oeste (W)
-                      </button>
-                      <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resVertical.hAng, 'Vertical E')}>
-                        Usar H Este (E)
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* BLOQUE 2: TRANSFORMACIÓN DE TIEMPO */}
-        <section className="glass-panel">
-          <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Clock size={20} color="var(--accent-color)" /> Escala de Tiempos (HOA / TU)
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        {/* BLOQUE 1: DATOS Y CÁLCULOS ASTRONÓMICOS */}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="glass-panel">
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <MapPin size={20} color="var(--primary-color)" /> Datos de Ubicación y Astro
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group">
-                <label>Longitud (λ)</label>
-                <div style={{ display: 'flex', gap: '0.25rem' }}>
-                  <input type="number" className="form-input" value={longitud.d} onChange={e => setLongitud({...longitud, d: e.target.value})} />
-                  <input type="number" className="form-input" value={longitud.m} onChange={e => setLongitud({...longitud, m: e.target.value})} />
-                  <input type="number" className="form-input" value={longitud.s} onChange={e => setLongitud({...longitud, s: e.target.value})} />
+                <label>Latitud (φ)</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="number" className="form-input" value={lat.d} onChange={e => setLat({...lat, d: e.target.value})} />
+                  <input type="number" className="form-input" value={lat.m} onChange={e => setLat({...lat, m: e.target.value})} />
+                  <input type="number" className="form-input" value={lat.s} onChange={e => setLat({...lat, s: e.target.value})} />
                 </div>
               </div>
               <div className="form-group">
-                <label>Huso</label>
-                <select className="form-input" value={huso} onChange={e => setHuso(e.target.value)}>
-                  <option value="-3">-3 (Argentina)</option>
-                  <option value="0">0 (Greenwich)</option>
-                </select>
+                <label>Declinación del Sol (δ)</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="number" className="form-input" value={dec.d} onChange={e => setDec({...dec, d: e.target.value})} />
+                  <input type="number" className="form-input" value={dec.m} onChange={e => setDec({...dec, m: e.target.value})} />
+                  <input type="number" className="form-input" value={dec.s} onChange={e => setDec({...dec, s: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <button className="btn-primary" style={{ flex: 1 }} onClick={calcularHv}>Calcular Salida/Puesta</button>
+                <button className="btn-primary" style={{ flex: 1, background: 'var(--accent-color)', color: 'black' }} onClick={calcularVertical}>Primer Vertical</button>
               </div>
             </div>
+          </div>
 
+          {/* RESULTADOS SALIDA / PUESTA */}
+          {resHv && (
+            <div className="glass-panel" style={{ borderLeft: '4px solid #10b981' }}>
+              <h4 style={{ color: '#10b981', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Target size={18} /> Resultados de Salida y Puesta
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta: {formatH(resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida: {formatH(24 - resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Día: {formatH(resHv.durDia)}</div>
+                <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Noche: {formatH(resHv.durNoche)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#ef4444' }} onClick={() => setResHvTime(transformarTiempo(resHv.h, 'Puesta'))}>Transformar Puesta</button>
+                <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#10b981' }} onClick={() => setResHvTime(transformarTiempo(24 - resHv.h, 'Salida'))}>Transformar Salida</button>
+              </div>
+              {resHvTime && (
+                <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #10b981' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.5rem', color: '#10b981' }}>
+                    <span>HOA {resHvTime.context}: {resHvTime.hoa}</span>
+                    <span>TU: {resHvTime.tu}</span>
+                  </div>
+                  {resHvTime.steps.map((s, i) => (
+                    <div key={i} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
+                      <span>{s.t}:</span><span>{s.v}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* RESULTADOS PRIMER VERTICAL */}
+          {resVertical && (
+            <div className="glass-panel" style={{ borderLeft: '4px solid var(--accent-color)' }}>
+              <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Navigation size={18} /> Resultados del Primer Vertical
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste: {formatH(resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este: {formatH(24 - resVertical.hAng)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#ef4444' }} onClick={() => setResVerticalTime(transformarTiempo(resVertical.hAng, 'Vertical W'))}>Transformar Oeste</button>
+                <button className="btn-primary" style={{ flex: 1, fontSize: '0.7rem', background: '#10b981' }} onClick={() => setResVerticalTime(transformarTiempo(24 - resVertical.hAng, 'Vertical E'))}>Transformar Este</button>
+              </div>
+              {resVerticalTime && (
+                <div style={{ padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>
+                    <span>HOA {resVerticalTime.context}: {resVerticalTime.hoa}</span>
+                    <span>TU: {resVerticalTime.tu}</span>
+                  </div>
+                  {resVerticalTime.steps.map((s, i) => (
+                    <div key={i} style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
+                      <span>{s.t}:</span><span>{s.v}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* BLOQUE 2: ESCALA DE TIEMPOS Y CULMINACIÓN */}
+        <section className="glass-panel">
+          <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Clock size={20} color="var(--accent-color)" /> Datos de Tiempo (Et / λ / Huso)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="form-group">
+              <label>Longitud (λ)</label>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <input type="number" className="form-input" value={longitud.d} onChange={e => setLongitud({...longitud, d: e.target.value})} />
+                <input type="number" className="form-input" value={longitud.m} onChange={e => setLongitud({...longitud, m: e.target.value})} />
+                <input type="number" className="form-input" value={longitud.s} onChange={e => setLongitud({...longitud, s: e.target.value})} />
+              </div>
+            </div>
             <div className="form-group">
               <label>Ecuación del Tiempo (Et)</label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -297,67 +250,53 @@ export default function CalculoSol() {
                 <input type="number" className="form-input" placeholder="s" value={et.s} onChange={e => setEt({...et, s: e.target.value})} />
               </div>
             </div>
+            <div className="form-group">
+              <label>Huso</label>
+              <select className="form-input" value={huso} onChange={e => setHuso(e.target.value)}>
+                <option value="-3">-3 (Argentina)</option>
+                <option value="0">0 (Greenwich)</option>
+              </select>
+            </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="btn-primary" style={{ flex: 1, background: 'var(--accent-color)', color: 'black' }} onClick={() => calcularTiempos(undefined, 'Entrada')}>
-                Calcular HOA/TU
-              </button>
-              <button className="btn-primary" style={{ flex: 1, background: '#10b981' }} onClick={() => calcularTiempos(0, 'Culminación')}>
-                Culminación (Hv=0)
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+              <button className="btn-primary" style={{ width: '100%', background: '#10b981' }} onClick={() => setResFinalGeneral(transformarTiempo(0, 'Culminación'))}>
+                Calcular Culminación Superior (Hv=0)
               </button>
             </div>
 
-            {resFinal && (
-              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
-                <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                  <Zap size={18} /> Transformación a Hora del Reloj
+            {resFinalGeneral && (
+              <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #10b981' }}>
+                <h4 style={{ color: '#10b981', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Zap size={18} /> Resultado de Culminación
                 </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>HOA Final: {resFinal.hoa}</div>
-                  <div className="result-badge">TU Final: {resFinal.tu}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="result-badge" style={{ borderColor: '#10b981' }}>HOA: {resFinalGeneral.hoa}</div>
+                  <div className="result-badge">TU: {resFinalGeneral.tu}</div>
                 </div>
-                {resFinal.esCulminacion && (
-                  <div style={{ marginBottom: '1.5rem', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', border: '1px solid #10b981', textAlign: 'center', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                    Este es el valor de la culminación superior
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {resFinal.steps.map((s, i) => (
-                    <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>{s.t} ({s.f})</span>
-                        <span style={{ fontWeight: 'bold' }}>{s.v}</span>
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '0.2rem' }}>{s.d}</div>
+                <p style={{ fontSize: '0.8rem', color: '#10b981', textAlign: 'center', marginBottom: '1rem', fontWeight: 'bold' }}>
+                  Este es el valor de la culminación superior
+                </p>
+                {resFinalGeneral.steps.map((s, i) => (
+                  <div key={i} style={{ fontSize: '0.75rem', marginBottom: '0.4rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{s.t}:</span>
+                      <span style={{ fontWeight: 'bold' }}>{s.v}</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </section>
-
       </div>
 
-      {/* FOOTER DE AYUDA RÁPIDA */}
       <footer className="glass-panel" style={{ marginTop: '2rem', borderTop: '4px solid #f59e0b' }}>
         <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f59e0b', marginBottom: '1rem' }}>
-          <HelpCircle size={18} /> Guía de Resolución Solar
+          <HelpCircle size={18} /> Guía de Uso del Tablero
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', fontSize: '0.85rem' }}>
-          <div>
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>1. Salida/Puesta</p>
-            <p style={{ color: 'var(--text-muted)' }}>Calcula H, Az y duraciones. Úsalo en el bloque derecho para obtener la hora del reloj (HOA).</p>
-          </div>
-          <div>
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>2. Culminación</p>
-            <p style={{ color: 'var(--text-muted)' }}>Hv=24h (0h). Es el mediodía oficial.</p>
-          </div>
-          <div>
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Vertical</p>
-            <p style={{ color: 'var(--text-muted)' }}>Calculamos z, h y también el tiempo (H) en que el Sol corta la línea E-O.</p>
-          </div>
-        </div>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          1. Ingresa Latitud y Declinación a la izquierda. 2. Calcula el evento (Salida o Vertical). 3. Ingresa Et y Longitud a la derecha. 4. Presiona "Transformar" en el bloque del evento para obtener la hora oficial.
+        </p>
       </footer>
     </div>
   );
