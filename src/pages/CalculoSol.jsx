@@ -50,7 +50,8 @@ export default function CalculoSol() {
     const hDeg = toDeg(Math.acos(cosH));
     const hHoras = hDeg / 15;
     const cosAz = -(Math.sin(decRad) / Math.cos(phiRad));
-    const az = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
+    const azW = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
+    const azE = 360 - azW;
 
     // Duraciones
     const durDia = hHoras * 2;
@@ -58,16 +59,18 @@ export default function CalculoSol() {
 
     setResHv({
       h: hHoras,
-      az: az,
+      azW: azW,
+      azE: azE,
       hDeg: hDeg,
       durDia: durDia,
       durNoche: durNoche,
       steps: [
         { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', v: cosH.toFixed(6) },
         { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H)', v: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` },
-        { t: '3. Azimut en Horizonte', f: 'cos Az = -(sen δ / cos φ)', v: formatDMS(az) },
-        { t: '4. Duración del Día', f: 'D = 2 × H', v: formatH(durDia) },
-        { t: '5. Duración de la Noche', f: 'N = 24 - D', v: formatH(durNoche) }
+        { t: '3. Azimut Puesta (W)', f: 'cos Az = -(sen δ / cos φ)', v: formatDMS(azW) },
+        { t: '4. Azimut Salida (E)', f: '360° - Az(W)', v: formatDMS(azE) },
+        { t: '5. Duración del Día', f: 'D = 2 × H', v: formatH(durDia) },
+        { t: '6. Duración de la Noche', f: 'N = 24 - D', v: formatH(durNoche) }
       ]
     });
   };
@@ -148,6 +151,10 @@ export default function CalculoSol() {
                   <div style={{ color: 'red' }}>{resHv.error}</div>
                 ) : (
                   <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                      <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {resHv && formatDMS(resHv.azW)}</div>
+                      <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {resHv && formatDMS(resHv.azE)}</div>
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta (W): {formatH(resHv.h)}</div>
                       <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida (E): {formatH(24 - resHv.h)}</div>
