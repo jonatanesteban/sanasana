@@ -9,13 +9,12 @@ export default function Unidad3() {
   const [val2, setVal2] = useState({ d: '-35', m: '0', s: '0' }); // Dec o z
   const [lat, setLat] = useState({ d: '5', m: '0', s: '0' });   // Latitud
 
-  // Estados para Casos Especiales
   const [casoEspecial, setCasoEspecial] = useState('culminacion');
-  const [subCaso, setSubCaso] = useState('superior_norte'); // Para culminación
+  const [subCaso, setSubCaso] = useState('superior_norte'); 
 
   const [desarrollo, setDesarrollo] = useState([]);
   const [sugerenciaSol, setSugerenciaSol] = useState(false);
-  const [currentCoords, setCurrentCoords] = useState(null); // Para el gráfico
+  const [currentCoords, setCurrentCoords] = useState(null); 
 
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -31,21 +30,25 @@ export default function Unidad3() {
     return `${dec < 0 ? '-' : ''}${d}° ${m}' ${s.toFixed(2)}''`;
   };
 
-  // Función de proyección para el gráfico
-  const project = (lat, lon, phi) => {
+  const project = (h, az) => {
     const radius = 120;
     const center = 150;
-    const latR = toRad(lat);
-    const lonR = toRad(lon);
-    const x = radius * Math.cos(latR) * Math.sin(lonR);
-    const y = -radius * Math.sin(latR);
-    const z = radius * Math.cos(latR) * Math.cos(lonR);
-    const tilt = toRad(20);
-    const rot = toRad(30);
+    const hR = toRad(h);
+    const azR = toRad(az);
+    
+    // Proyección 3D simple
+    const x = radius * Math.cos(hR) * Math.sin(azR);
+    const y = -radius * Math.sin(hR);
+    const z = radius * Math.cos(hR) * Math.cos(azR);
+
+    const tilt = toRad(15);
+    const rot = toRad(25);
+    
     const x1 = x * Math.cos(rot) - z * Math.sin(rot);
     const z1 = x * Math.sin(rot) + z * Math.cos(rot);
     const y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt);
-    return { x: center + x1, y: center + y2 };
+    
+    return { x: center + x1, y: center + y2, z: z1 };
   };
 
   const calcular = (e) => {
@@ -89,19 +92,13 @@ export default function Unidad3() {
 
       const sinDec = (Math.cos(zRad) * Math.sin(phiRad)) - (Math.sin(zRad) * Math.cos(phiRad) * Math.cos(azRad));
       const decRad = Math.asin(Math.max(-1, Math.min(1, sinDec)));
-      const decFinal = toDeg(decRad);
-      pasos.push({ titulo: 'Declinación (δ)', formula: 'sen δ = cos z sen φ - sen z cos φ cos Az', desarrollo: `cos(${zDec.toFixed(2)})sen(${phiDec.toFixed(2)}) - sen(${zDec.toFixed(2)})cos(${phiDec.toFixed(2)})cos(${azDec.toFixed(2)})`, resultado: formatDMS(decFinal) });
+      pasos.push({ titulo: 'Declinación (δ)', formula: 'sen δ = cos z sen φ - sen z cos φ cos Az', desarrollo: `cos(${zDec.toFixed(2)})sen(${phiDec.toFixed(2)}) - sen(${zDec.toFixed(2)})cos(${phiDec.toFixed(2)})cos(${azDec.toFixed(2)})`, resultado: formatDMS(toDeg(decRad)) });
 
       const numH = Math.sin(azRad);
       const denH = (Math.cos(phiRad) * (1 / Math.tan(zRad))) + (Math.sin(phiRad) * Math.cos(azRad));
-      const tanH = numH / denH;
-      let hDecRaw = toDeg(Math.atan(tanH));
-      let hFinal = hDecRaw;
-      if (tanH > 0 && azDec < 180) hFinal = hDecRaw;
-      else if (tanH > 0 && azDec > 180) hFinal = hDecRaw + 180;
-      else if (tanH < 0 && azDec < 180) hFinal = hDecRaw + 180;
-      else if (tanH < 0 && azDec > 180) hFinal = hDecRaw + 360;
-      pasos.push({ titulo: 'Ángulo Horario (H)', formula: 'tan H = sen Az / (cos φ cot z + sen φ cos Az)', desarrollo: `tan H = ${numH.toFixed(4)} / ${denH.toFixed(4)}`, resultado: formatDMS(hFinal) });
+      let hDecRaw = toDeg(Math.atan2(numH, denH));
+      if (hDecRaw < 0) hDecRaw += 360;
+      pasos.push({ titulo: 'Ángulo Horario (H)', formula: 'tan H = sen Az / (cos φ cot z + sen φ cos Az)', desarrollo: `atan2(${numH.toFixed(4)}, ${denH.toFixed(4)})`, resultado: formatDMS(hDecRaw) });
 
     } else if (modo === 'especiales') {
       const decDec = dmsToDec(val2.d, val2.m, val2.s);
@@ -126,13 +123,13 @@ export default function Unidad3() {
         hAstroFinal = 90 - z;
         azAstroFinal = az;
         pasos.push({ titulo: 'Distancia Cenital (z)', formula: 'cos z = sen φ / sen δ', desarrollo: `sen(${phiDec.toFixed(2)}) / sen(${decDec.toFixed(2)}) = ${cosZ.toFixed(4)}`, resultado: formatDMS(z) });
-        pasos.push({ titulo: 'Azimut (Az)', formula: 'sen Az = cos δ / cos φ', desarrollo: `cos(${decDec.toFixed(2)}) / cos(${phiDec.toFixed(2)}) = ${sinAz.toFixed(4)}`, resultado: `Az W = ${az.toFixed(2)}° | Az E = ${(360-az).toFixed(2)}°` });
+        pasos.push({ titulo: 'Azimut (Az)', formula: 'sen Az = cos δ / cos φ', desarrollo: `cos(${decDec.toFixed(2)}) / cos(${phiDec.toFixed(2)}) = ${sinAz.toFixed(4)}`, resultado: `Az = ${az.toFixed(2)}°` });
 
       } else if (casoEspecial === 'vertical') {
         const cosZ = Math.sin(decRad) / Math.sin(phiRad);
         const z = toDeg(Math.acos(cosZ));
         hAstroFinal = 90 - z;
-        azAstroFinal = 90; // E-O
+        azAstroFinal = 90;
         pasos.push({ titulo: 'Azimut (Az)', formula: 'Por definición (Primer Vertical)', desarrollo: 'El astro corta la línea E-O', resultado: 'Az = 90° o 270°' });
         pasos.push({ titulo: 'Distancia Cenital (z)', formula: 'cos z = sen δ / sen φ', desarrollo: `sen(${decDec.toFixed(2)}) / sen(${phiDec.toFixed(2)}) = ${cosZ.toFixed(4)}`, resultado: formatDMS(z) });
 
@@ -154,22 +151,16 @@ export default function Unidad3() {
 
   return (
     <div className="unidad-3-container" style={{ padding: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <header className="page-header">
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><BookOpen size={28} color="var(--primary-color)" /> Unidad 3: Situaciones Especiales</h1>
+      <header className="page-header" style={{ marginBottom: '2rem' }}>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}><BookOpen size={32} color="var(--primary-color)" /> Unidad 3: Situaciones Especiales</h1>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-          <button className={`nav-btn ${modo === 'ecu_to_hor' ? 'active' : ''}`} onClick={() => { setModo('ecu_to_hor'); setDesarrollo([]); }}>
-            Ecuatoriales ➔ Horiz.
-          </button>
-          <button className={`nav-btn ${modo === 'hor_to_ecu' ? 'active' : ''}`} onClick={() => { setModo('hor_to_ecu'); setDesarrollo([]); }}>
-            Horiz. ➔ Ecuatoriales
-          </button>
-          <button className={`nav-btn ${modo === 'especiales' ? 'active' : ''}`} onClick={() => { setModo('especiales'); setDesarrollo([]); }}>
-            <Star size={18} /> Casos Especiales
-          </button>
+          <button className={`nav-btn ${modo === 'ecu_to_hor' ? 'active' : ''}`} onClick={() => { setModo('ecu_to_hor'); setDesarrollo([]); }}>Ecuatoriales ➔ Horiz.</button>
+          <button className={`nav-btn ${modo === 'hor_to_ecu' ? 'active' : ''}`} onClick={() => { setModo('hor_to_ecu'); setDesarrollo([]); }}>Horiz. ➔ Ecuatoriales</button>
+          <button className={`nav-btn ${modo === 'especiales' ? 'active' : ''}`} onClick={() => { setModo('especiales'); setDesarrollo([]); }}><Star size={18} /> Casos Especiales</button>
         </div>
       </header>
 
-      <main className="main-content" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', marginTop: '2rem' }}>
+      <main className="main-content" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
         <section className="inputs-section">
           <form onSubmit={calcular} className="glass-panel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -214,9 +205,7 @@ export default function Unidad3() {
                 </div>
               )}
             </div>
-            <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem' }}>
-              Calcular Caso <ArrowRight size={18} />
-            </button>
+            <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem' }}>Calcular Caso <ArrowRight size={18} /></button>
           </form>
 
           {desarrollo.length > 0 && (
@@ -237,31 +226,48 @@ export default function Unidad3() {
         </section>
 
         <aside className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1.25rem' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
-            <Globe color="var(--accent-color)" size={20} /> Graficador de Esfera
-          </h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}><Globe color="var(--accent-color)" size={20} /> Graficador de Esfera</h3>
           
-          <div style={{ width: '100%', height: '300px', background: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative', border: '1px solid var(--glass-border)' }}>
+          <div style={{ width: '100%', height: '350px', background: 'radial-gradient(circle at center, #1e1e2e 0%, #000 100%)', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative', border: '1px solid var(--glass-border)' }}>
             {currentCoords ? (
-              <svg width="100%" height="100%" viewBox="0 0 300 300">
-                <circle cx="150" cy="150" r="120" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" />
-                {/* Horizonte */}
-                <ellipse cx="150" cy="150" rx="120" ry="30" fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4" />
-                {/* Ecuador */}
-                <ellipse cx="150" cy={150 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="1" opacity="0.4" />
-                {/* Estrella */}
+              <svg width="100%" height="100%" viewBox="0 0 300 350">
+                {/* Esfera */}
+                <circle cx="150" cy="175" r="120" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" />
+                
+                {/* VERTICAL DEL LUGAR (Zenit-Nadir) */}
+                <line x1="150" y1="55" x2="150" y2="295" stroke="var(--primary-color)" strokeWidth="2" strokeDasharray="5" opacity="0.6" />
+                <text x="150" y="45" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">Z (Zenit)</text>
+                <text x="150" y="315" textAnchor="middle" fill="#aaa" fontSize="14" fontWeight="bold">Na (Nadir)</text>
+
+                {/* Horizonte Astronómico */}
+                <ellipse cx="150" cy="175" rx="120" ry="30" fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" strokeWidth="2" />
+                <text x="35" y="178" fill="#3b82f6" fontSize="10">W</text>
+                <text x="265" y="178" fill="#3b82f6" fontSize="10">E</text>
+
+                {/* Ecuador Celeste */}
+                <ellipse cx="150" cy={175 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="1.5" opacity="0.4" />
+
+                {/* Estrella y Arcos */}
                 {(() => {
-                  const p = project(currentCoords.h, currentCoords.az, currentCoords.phi);
+                  const p = project(currentCoords.h, currentCoords.az);
+                  const pZ = { x: 150, y: 55 }; // Punto Zenit
+                  const pProjH = project(0, currentCoords.az); // Proyección en horizonte
+
                   return (
                     <g>
-                      <circle cx={p.x} cy={p.y} r="5" fill="var(--primary-color)" />
-                      <circle cx={p.x} cy={p.y} r="2" fill="white" />
-                      <text x={p.x + 8} y={p.y - 8} fill="white" fontSize="10">Estrella</text>
+                      {/* Arco Zenital (desde vertical) */}
+                      <path d={`M ${pZ.x} ${pZ.y} Q 150 175 ${p.x} ${p.y}`} fill="none" stroke="rgba(255,255,255,0.2)" strokeDasharray="2" />
+                      
+                      {/* Vertical de la Estrella */}
+                      <line x1={p.x} y1={p.y} x2={pProjH.x} y2={pProjH.y} stroke="var(--primary-color)" strokeWidth="1" strokeDasharray="3" opacity="0.5" />
+
+                      {/* Punto de la Estrella */}
+                      <circle cx={p.x} cy={p.y} r="6" fill="var(--primary-color)" filter="blur(1px)" />
+                      <circle cx={p.x} cy={p.y} r="3" fill="white" />
+                      <text x={p.x + 10} y={p.y - 10} fill="white" fontSize="12" fontWeight="bold">★ Estrella</text>
                     </g>
                   );
                 })()}
-                <text x="150" y="25" textAnchor="middle" fill="#fff" fontSize="10">Z</text>
-                <text x="150" y="285" textAnchor="middle" fill="#aaa" fontSize="10">Na</text>
               </svg>
             ) : (
               <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: '1rem' }}>
@@ -270,12 +276,12 @@ export default function Unidad3() {
             )}
           </div>
 
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            <p style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>Referencias:</p>
-            <ul style={{ paddingLeft: '1rem' }}>
-              <li><strong>Ecuador:</strong> Inclinado según φ.</li>
-              <li><strong>Horizonte:</strong> Línea punteada azul.</li>
-              <li><strong>Estrella:</strong> Punto rosa en la esfera.</li>
+          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem' }}>
+            <p style={{ fontWeight: 'bold', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>Elementos Locales:</p>
+            <ul style={{ listStyle: 'none', padding: 0, color: 'var(--text-muted)' }}>
+              <li><strong>Vertical:</strong> Línea punteada rosa (Z-Na).</li>
+              <li><strong>Distancia Cenital ($z$):</strong> Arco desde el Zenit.</li>
+              <li><strong>Altura ($h$):</strong> Medida desde el horizonte.</li>
             </ul>
           </div>
         </aside>
