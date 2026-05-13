@@ -50,20 +50,26 @@ export default function Unidad4() {
       steps.push({ t: '5. Tiempo Verdadero (Tv / Hv)', f: 'Tm + Et', d: `${tm.toFixed(4)} + (${etDec.toFixed(6)})`, v: formatH(tv) });
       setResSol({ final: formatH(tv), steps });
     } else {
-      // Hv -> TU (Incluye modo Culminación donde Hv=0)
-      const tv = valDec;
+      let tv = valDec;
+      if (problemaTipo === 'culminacion_sol' && (tv === 0 || tv === 24)) tv = 24;
+      
       const tm = tv - etDec;
       const hcl = tm + 12;
       const difLambdaHuso = (lambdaDec / 15) - husoVal;
       const hoa = hcl - difLambdaHuso;
       const tu = hoa - husoVal;
-      
+
       steps.push({ t: '1. Ángulo Horario Verdadero (Hv)', v: formatH(tv) });
-      steps.push({ t: '2. Tiempo Medio (Tm)', f: 'Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) });
+      steps.push({ t: '2. Tiempo Medio (Tm)', f: 'Hv - Et', d: `${tv === 24 ? '24.0000' : tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) });
       steps.push({ t: '3. Hora Civil Local (HCL)', f: 'Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) });
       steps.push({ t: '4. Hora Oficial (HOA)', f: 'HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) });
       steps.push({ t: '5. Tiempo Universal (TU)', f: 'HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) });
-      setResSol({ final: formatH(hoa), nota: 'Resultado final en Hora Oficial (HOA)', steps });
+      
+      setResSol({ 
+        final: problemaTipo === 'culminacion_sol' ? formatH(hoa) : formatH(tu), 
+        nota: problemaTipo === 'culminacion_sol' ? 'Resultado final en Hora Oficial (HOA)' : 'Resultado final en Tiempo Universal (TU)',
+        steps 
+      });
     }
   };
 
@@ -147,7 +153,7 @@ export default function Unidad4() {
                   <input type="number" className="form-input" placeholder="m" value={inputSol.m} onChange={e => setInputSol({...inputSol, m: e.target.value})} disabled={problemaTipo === 'culminacion_sol'} />
                   <input type="number" className="form-input" placeholder="s" value={inputSol.s} onChange={e => setInputSol({...inputSol, s: e.target.value})} disabled={problemaTipo === 'culminacion_sol'} />
                 </div>
-                {problemaTipo === 'culminacion_sol' && <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>* Hv fijo en 0 para culminación</span>}
+                {problemaTipo === 'culminacion_sol' && <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>* Usando base 24:00:00 para el cálculo</span>}
               </div>
               <div className="form-group">
                 <label>Ecuación del Tiempo (Et del SANA)</label>
