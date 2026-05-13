@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin } from 'lucide-react';
+import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon } from 'lucide-react';
 
 export default function CalculoSol() {
   const [lat, setLat] = useState({ d: '-34', m: '0', s: '0' });
@@ -44,14 +44,22 @@ export default function CalculoSol() {
     const cosAz = Math.sin(decRad) / Math.cos(phiRad);
     const az = toDeg(Math.acos(cosAz));
 
+    // Duraciones
+    const durDia = hHoras * 2;
+    const durNoche = 24 - durDia;
+
     setResHv({
       h: hHoras,
       az: az,
       hDeg: hDeg,
+      durDia: durDia,
+      durNoche: durNoche,
       steps: [
         { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', v: cosH.toFixed(6) },
         { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H)', v: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` },
-        { t: '3. Azimut en Horizonte', f: 'cos Az = sen δ / cos φ', v: `${az.toFixed(2)}°` }
+        { t: '3. Azimut en Horizonte', f: 'cos Az = sen δ / cos φ', v: `${az.toFixed(2)}°` },
+        { t: '4. Duración del Día', f: 'D = 2 × H', v: formatH(durDia) },
+        { t: '5. Duración de la Noche', f: 'N = 24 - D', v: formatH(durNoche) }
       ]
     });
   };
@@ -123,7 +131,7 @@ export default function CalculoSol() {
             </div>
 
             <button className="btn-primary" onClick={calcularHv} style={{ padding: '0.8rem' }}>
-              Calcular H (Salida/Puesta) y Azimut
+              Calcular Datos del Día (Salida/Puesta)
             </button>
 
             {resHv && (
@@ -135,6 +143,8 @@ export default function CalculoSol() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta (W): {formatH(resHv.h)}</div>
                       <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida (E): {formatH(24 - resHv.h)}</div>
+                      <div className="result-badge" style={{ borderColor: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' }}>Día: {formatH(resHv.durDia)}</div>
+                      <div className="result-badge" style={{ borderColor: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' }}>Noche: {formatH(resHv.durNoche)}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {resHv.steps.map((s, i) => (
@@ -146,10 +156,10 @@ export default function CalculoSol() {
                     </div>
                     <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem' }}>
                       <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#ef4444' }} onClick={() => calcularTiempos(resHv.h)}>
-                        Usar H Puesta (Oeste)
+                        Usar H Puesta (W)
                       </button>
                       <button className="btn-primary" style={{ flex: 1, fontSize: '0.75rem', background: '#10b981' }} onClick={() => calcularTiempos(24 - resHv.h)}>
-                        Usar H Salida (Este)
+                        Usar H Salida (E)
                       </button>
                     </div>
                   </>
@@ -248,8 +258,8 @@ export default function CalculoSol() {
             <p style={{ color: 'var(--text-muted)' }}>Presiona el botón verde. Automáticamente usará Hv=24h (0h) para darte el mediodía oficial.</p>
           </div>
           <div>
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Datos del SANA</p>
-            <p style={{ color: 'var(--text-muted)' }}>La Declinación (δ) y la Et varían durante el día. Usa los valores más cercanos a la hora buscada.</p>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>3. Duración</p>
+            <p style={{ color: 'var(--text-muted)' }}>El sistema calcula automáticamente cuánto dura el día y la noche basándose en el ángulo horario H.</p>
           </div>
         </div>
       </footer>
