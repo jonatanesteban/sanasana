@@ -40,6 +40,12 @@ export default function FormulasCalculos() {
   const [hThetaL, setHThetaL] = useState({ h: '', m: '', s: '' });
   const [hAr, setHAr] = useState({ h: '', m: '', s: '' });
   const [hResult, setHResult] = useState(null);
+  
+  // Estados para desarrollo paso a paso U4
+  const [tuDesarrollo, setTuDesarrollo] = useState(null);
+  const [isDesarrollo, setIsDesarrollo] = useState(null);
+  const [tgDesarrollo, setTgDesarrollo] = useState(null);
+  const [hDesarrollo, setHDesarrollo] = useState(null);
 
   // --- Estados Unidad 3 ---
   const [u3Z, setU3Z] = useState({ lat: {d:'', m:'', s:''}, dec: {d:'', m:'', s:''}, h: {d:'', m:'', s:''} });
@@ -72,32 +78,42 @@ export default function FormulasCalculos() {
   // --- Funciones U4 ---
   const calcTU = () => {
     const h = parseInt(tuLegal.h || 0);
+    const m = parseInt(tuLegal.m || 0);
+    const s = parseFloat(tuLegal.s || 0);
     const diff = -3;
     let resH = h - diff;
     if (resH >= 24) resH -= 24;
     if (resH < 0) resH += 24;
-    setTuResult(`${String(resH).padStart(2, '0')}:${String(tuLegal.m || 0).padStart(2, '0')}:${String(parseFloat(tuLegal.s || 0).toFixed(2)).padStart(5, '0')}`);
+    
+    setTuDesarrollo(`HL = ${h}h ${m}m ${s}s\nTU = HL - Huso = ${h}h - (-3) = ${resH}h\nResultado = ${resH}:${m}:${s}`);
+    setTuResult(`${String(resH).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(2)).padStart(5, '0')}`);
   };
 
   const calcIS = () => {
     const tu = dmsToDecimal(isTu.h, isTu.m, isTu.s);
-    const is = tu * 1.0027379;
+    const factor = 1.0027379;
+    const is = tu * factor;
     const h = Math.floor(is);
     const m = Math.floor((is - h) * 60);
     const s = ((is - h) * 60 - m) * 60;
+    
+    setIsDesarrollo(`TU = ${tu.toFixed(6)}h\nIS = TU · 1.0027379\nIS = ${tu.toFixed(6)} · ${factor} = ${is.toFixed(6)}h`);
     setIsResult(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(4)).padStart(7, '0')}`);
   };
 
   const calcTG = () => {
     const parts = tgTheta0.split(' ').filter(Boolean);
-    if (parts.length < 3) return alert('Formato de Theta 0 inválido');
+    if (parts.length < 3) return alert('Formato de Theta 0 inválido (usa: HH MM SS.ss)');
     const t0 = parseInt(parts[0]) + (parseInt(parts[1])/60) + (parseFloat(parts[2])/3600);
     const is = parseInt(tgIs.h || 0) + (parseInt(tgIs.m || 0)/60) + (parseFloat(tgIs.s || 0)/3600);
     let tg = t0 + is;
+    const tgBefore = tg;
     while (tg >= 24) tg -= 24;
     const h = Math.floor(tg);
     const m = Math.floor((tg - h) * 60);
     const s = ((tg - h) * 60 - m) * 60;
+    
+    setTgDesarrollo(`Θ₀ = ${t0.toFixed(6)}h\nIS = ${is.toFixed(6)}h\nΘG = Θ₀ + IS = ${t0.toFixed(6)} + ${is.toFixed(6)} = ${tgBefore.toFixed(6)}h\n(Si > 24h, restar 24h) ➔ ${tg.toFixed(6)}h`);
     setTgResult(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(4)).padStart(7, '0')}`);
   };
 
@@ -105,11 +121,14 @@ export default function FormulasCalculos() {
     const tl = dmsToDecimal(hThetaL.h, hThetaL.m, hThetaL.s);
     const ar = dmsToDecimal(hAr.h, hAr.m, hAr.s);
     let hVal = tl - ar;
+    const hBefore = hVal;
     while (hVal < 0) hVal += 24;
     while (hVal >= 24) hVal -= 24;
     const h = Math.floor(hVal);
     const m = Math.floor((hVal - h) * 60);
     const s = ((hVal - h) * 60 - m) * 60;
+    
+    setHDesarrollo(`ΘL = ${tl.toFixed(6)}h\nAR = ${ar.toFixed(6)}h\nH = ΘL - AR = ${tl.toFixed(6)} - ${ar.toFixed(6)} = ${hBefore.toFixed(6)}h\n(Ajustar a rango [0, 24h]) ➔ ${hVal.toFixed(6)}h`);
     setHResult(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(4)).padStart(7, '0')}`);
   };
 
@@ -373,6 +392,14 @@ export default function FormulasCalculos() {
                   </div>
                 </div>
                 <button className="btn-primary" onClick={calcTU} style={{ marginTop: 0, width: 'auto', padding: '0.85rem 1.5rem' }}>Calcular</button>
+                
+                {tuDesarrollo && (
+                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'pre-line', marginTop: '1rem' }}>
+                    <strong>Paso a paso:</strong><br />
+                    {tuDesarrollo}
+                  </div>
+                )}
+                
                 {tuResult && <div className="result-badge">TU: {tuResult}</div>}
               </div>
             </CalculatorCard>
@@ -388,6 +415,14 @@ export default function FormulasCalculos() {
                   </div>
                 </div>
                 <button className="btn-primary" onClick={calcIS} style={{ marginTop: 0, width: 'auto', padding: '0.85rem 1.5rem' }}>Calcular</button>
+                
+                {isDesarrollo && (
+                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'pre-line', marginTop: '1rem' }}>
+                    <strong>Paso a paso:</strong><br />
+                    {isDesarrollo}
+                  </div>
+                )}
+
                 {isResult && <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>IS: {isResult}</div>}
               </div>
             </CalculatorCard>
@@ -407,6 +442,14 @@ export default function FormulasCalculos() {
                   </div>
                 </div>
                 <button className="btn-primary" onClick={calcTG}>Calcular</button>
+                
+                {tgDesarrollo && (
+                  <div style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
+                    <strong>Paso a paso:</strong><br />
+                    {tgDesarrollo}
+                  </div>
+                )}
+
                 {tgResult && <div className="result-badge" style={{ gridColumn: '1 / -1', borderColor: 'var(--accent-color-2)' }}>ΘG: {tgResult}</div>}
               </div>
             </CalculatorCard>
@@ -430,6 +473,14 @@ export default function FormulasCalculos() {
                   </div>
                 </div>
                 <button className="btn-primary" onClick={calcH}>Calcular</button>
+                
+                {hDesarrollo && (
+                  <div style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
+                    <strong>Paso a paso:</strong><br />
+                    {hDesarrollo}
+                  </div>
+                )}
+
                 {hResult && <div className="result-badge" style={{ gridColumn: '1 / -1', borderColor: '#10b981' }}>H: {hResult}</div>}
               </div>
             </CalculatorCard>

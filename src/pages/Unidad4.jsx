@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Info, Calculator, RefreshCw, ArrowRight, Calendar, BookOpen } from 'lucide-react';
-import eneroData from '../enero_data.json';
+import { Clock, Info, Calculator, RefreshCw, ArrowRight, Calendar, BookOpen, Sun, Lightbulb, HelpCircle, ExternalLink } from 'lucide-react';
 
 export default function Unidad4() {
   const [activeTab, setActiveTab] = useState('horas');
-  const [fecha, setFecha] = useState('2026-01-01');
   const [huso, setHuso] = useState('-3');
+  const [longitud, setLongitud] = useState({ d: '-68', m: '0', s: '0' });
   
-  // Estados para cálculos
-  const [horaInput, setHoraInput] = useState({ h: '12', m: '0', s: '0' });
-  const [resHoras, setResHoras] = useState(null);
+  // Estados para cálculos de Sol
+  const [modoSol, setModoSol] = useState('tu_to_hv');
+  const [inputSol, setInputSol] = useState({ h: '12', m: '0', s: '0' });
+  const [etInput, setEtInput] = useState({ m: '0', s: '0', signo: '-' });
+  const [resSol, setResSol] = useState(null);
   
-  const [intervaloInput, setIntervaloInput] = useState({ h: '1', m: '0', s: '0', tipo: 'solar_to_sid' });
-  const [resIntervalo, setResIntervalo] = useState(null);
-
-  const [tvInput, setTvInput] = useState({ h: '', m: '', s: '' });
-  const [tmInput, setTmInput] = useState({ h: '', m: '', s: '' });
-  const [resEt, setResEt] = useState(null);
+  // Estado para el Asistente
+  const [problemaTipo, setProblemaTipo] = useState(null);
 
   const dmsToDec = (d, m, s) => {
     const deg = parseFloat(d || 0);
@@ -33,260 +30,216 @@ export default function Unidad4() {
     return `${decimal < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(2)).padStart(5, '0')}`;
   };
 
-  // 1. Cálculos de Horas (TU, HL, Civil)
-  const calcularHoras = () => {
-    const hlDec = dmsToDec(horaInput.h, horaInput.m, horaInput.s);
+  const calcularSol = () => {
+    const steps = [];
+    const valDec = dmsToDec(inputSol.h, inputSol.m, inputSol.s);
+    const lambdaDec = dmsToDec(longitud.d, longitud.m, longitud.s);
     const husoVal = parseFloat(huso);
+    const etDec = (parseFloat(etInput.m || 0) / 60 + parseFloat(etInput.s || 0) / 3600) * (etInput.signo === '-' ? -1 : 1);
     
-    // TU = HL - Huso
-    let tuDec = hlDec - husoVal;
-    
-    // Tm = TU (simplificado para ejercicios)
-    const tmDec = tuDec;
-    
-    // Hc = Tm + 12h
-    let hcDec = tmDec + 12;
-
-    setResHoras({
-      hl: formatH(hlDec),
-      tu: formatH(tuDec),
-      hc: formatH(hcDec),
-      desarrollo: [
-        { t: 'Hora Legal (HL)', v: formatH(hlDec) },
-        { t: 'Tiempo Universal (TU)', f: 'HL - Huso', d: `${hlDec.toFixed(4)} - (${husoVal})`, v: formatH(tuDec) },
-        { t: 'Hora Civil (Hc)', f: 'Tm + 12h', d: `${tmDec.toFixed(4)} + 12`, v: formatH(hcDec) }
-      ]
-    });
-  };
-
-  // 2. Ecuación del Tiempo
-  const calcularET = () => {
-    const tv = dmsToDec(tvInput.h, tvInput.m, tvInput.s);
-    const tm = dmsToDec(tmInput.h, tmInput.m, tmInput.s);
-    const et = tv - tm;
-    
-    // Convertir ET a minutos y segundos para mejor lectura
-    const etMin = et * 60;
-    const m = Math.floor(Math.abs(etMin));
-    const s = (Math.abs(etMin) - m) * 60;
-
-    setResEt({
-      et: `${et < 0 ? '-' : ''}${m}m ${s.toFixed(2)}s`,
-      decimal: et.toFixed(6),
-      desarrollo: `ET = Tv - Tm = ${tv.toFixed(4)}h - ${tm.toFixed(4)}h = ${et.toFixed(6)}h`
-    });
-  };
-
-  // 3. Conversión de Intervalos
-  const calcularIntervalo = () => {
-    const dec = dmsToDec(intervaloInput.h, intervaloInput.m, intervaloInput.s);
-    let res;
-    let factor;
-    if (intervaloInput.tipo === 'solar_to_sid') {
-      factor = 1.0027379;
-      res = dec * factor;
+    if (modoSol === 'tu_to_hv') {
+      const hoa = valDec + husoVal;
+      const difLambdaHuso = (lambdaDec / 15) - husoVal;
+      const hcl = hoa + difLambdaHuso;
+      const tm = hcl - 12;
+      const tv = tm + etDec;
+      steps.push({ t: '1. Tiempo Universal (TU)', v: formatH(valDec) });
+      steps.push({ t: '2. Hora Oficial (HOA)', f: 'TU + Huso', d: `${valDec.toFixed(4)} + (${husoVal})`, v: formatH(hoa) });
+      steps.push({ t: '3. Hora Civil Local (HCL)', f: 'HOA + (λ/15 - Huso)', d: `${hoa.toFixed(4)} + (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hcl) });
+      steps.push({ t: '4. Tiempo Medio (Tm)', f: 'HCL - 12h', d: `${hcl.toFixed(4)} - 12`, v: formatH(tm) });
+      steps.push({ t: '5. Tiempo Verdadero (Tv / Hv)', f: 'Tm + Et', d: `${tm.toFixed(4)} + (${etDec.toFixed(6)})`, v: formatH(tv) });
+      setResSol({ final: formatH(tv), steps });
     } else {
-      factor = 0.9972696;
-      res = dec * factor;
+      const tv = valDec;
+      const tm = tv - etDec;
+      const hcl = tm + 12;
+      const difLambdaHuso = (lambdaDec / 15) - husoVal;
+      const hoa = hcl - difLambdaHuso;
+      const tu = hoa - husoVal;
+      steps.push({ t: '1. Ánulo Horario Verdadero (Hv)', v: formatH(tv) });
+      steps.push({ t: '2. Tiempo Medio (Tm)', f: 'Hv - Et', d: `${tv.toFixed(4)} - (${etDec.toFixed(6)})`, v: formatH(tm) });
+      steps.push({ t: '3. Hora Civil Local (HCL)', f: 'Tm + 12h', d: `${tm.toFixed(4)} + 12`, v: formatH(hcl) });
+      steps.push({ t: '4. Hora Oficial (HOA)', f: 'HCL - (λ/15 - Huso)', d: `${hcl.toFixed(4)} - (${(lambdaDec/15).toFixed(4)} - ${husoVal})`, v: formatH(hoa) });
+      steps.push({ t: '5. Tiempo Universal (TU)', f: 'HOA - Huso', d: `${hoa.toFixed(4)} - (${husoVal})`, v: formatH(tu) });
+      setResSol({ final: formatH(tu), steps });
     }
-
-    setResIntervalo({
-      original: formatH(dec),
-      resultado: formatH(res),
-      factor: factor,
-      tipo: intervaloInput.tipo === 'solar_to_sid' ? 'Solar a Sidéreo' : 'Sidéreo a Solar'
-    });
   };
 
   return (
     <div className="unidad-4-container" style={{ padding: '1rem', maxWidth: '1200px', margin: '0 auto' }}>
       <header className="page-header">
-        <h1>Unidad 4: Sistemas de Tiempo</h1>
-        <p>Estudio de las escalas de tiempo solar y sidéreo.</p>
+        <h1>Unidad 4: El Sol y el Tiempo</h1>
+        <p>Asistente de cálculos solares y escalas de tiempo.</p>
+      </header>
+
+      {/* ASISTENTE INTELIGENTE (WIZARD) */}
+      <section className="glass-panel" style={{ marginTop: '1.5rem', borderLeft: '4px solid var(--primary-color)', background: 'rgba(99, 102, 241, 0.05)' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', marginBottom: '1rem' }}>
+          <Lightbulb color="var(--primary-color)" /> Asistente de Problemas
+        </h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>¿Qué tipo de ejercicio estás resolviendo?</p>
         
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-          <button className={`nav-btn ${activeTab === 'horas' ? 'active' : ''}`} onClick={() => setActiveTab('horas')}>
-            <Clock size={18} /> Sistemas de Hora
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          <button 
+            className={`mode-btn ${problemaTipo === 'salida' ? 'active' : ''}`}
+            onClick={() => { setProblemaTipo('salida'); setModoSol('hv_to_tu'); }}
+            style={{ textAlign: 'left', padding: '1rem' }}
+          >
+            <strong>Salida/Puesta del Sol</strong>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Tengo latitud/declinación y quiero saber la hora (TU).</div>
           </button>
-          <button className={`nav-btn ${activeTab === 'et' ? 'active' : ''}`} onClick={() => setActiveTab('et')}>
-            <Calculator size={18} /> Ecuación del Tiempo
-          </button>
-          <button className={`nav-btn ${activeTab === 'intervalos' ? 'active' : ''}`} onClick={() => setActiveTab('intervalos')}>
-            <RefreshCw size={18} /> Intervalos
+          <button 
+            className={`mode-btn ${problemaTipo === 'hora_hv' ? 'active' : ''}`}
+            onClick={() => { setProblemaTipo('hora_hv'); setModoSol('tu_to_hv'); }}
+            style={{ textAlign: 'left', padding: '1rem' }}
+          >
+            <strong>Posición del Sol</strong>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Tengo la hora del reloj y quiero saber el ángulo horario (Hv).</div>
           </button>
         </div>
-      </header>
+
+        {problemaTipo === 'salida' && (
+          <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--primary-color)' }}>
+            <h4 style={{ fontSize: '0.9rem', color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <HelpCircle size={16} /> Estrategia Sugerida:
+            </h4>
+            <div style={{ fontSize: '0.85rem', lineHeight: '1.6' }}>
+              <ol style={{ paddingLeft: '1.2rem' }}>
+                <li>
+                  Ve a la <strong>Unidad 3 ➔ Casos Especiales ➔ Salida/Puesta</strong>. 
+                  Calcula el valor de <strong>H</strong> (arco semidiurno).
+                </li>
+                <li>
+                  <strong>Tip de Oro:</strong> Ese valor de H es exactamente tu <strong>Hv</strong> (Ángulo Horario Verdadero).
+                </li>
+                <li>
+                  Ingresa ese <strong>Hv</strong> en la calculadora de abajo, busca la <strong>Et</strong> en el SANA y obtendrás el <strong>TU</strong>.
+                </li>
+              </ol>
+            </div>
+          </div>
+        )}
+      </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', marginTop: '2rem' }}>
         
-        {/* PANEL PRINCIPAL */}
         <div className="main-calc">
-          
-          {activeTab === 'horas' && (
-            <div className="glass-panel">
-              <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock color="var(--primary-color)" /> Conversión de Horas
+          <div className="glass-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {modoSol === 'tu_to_hv' ? <Clock color="var(--primary-color)" /> : <Sun color="var(--primary-color)" />}
+                {modoSol === 'tu_to_hv' ? 'Transformación: TU ➔ Hv' : 'Transformación: Hv ➔ TU'}
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div className="form-group">
-                  <label>Hora Legal (HL)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" className="form-input" placeholder="h" value={horaInput.h} onChange={e => setHoraInput({...horaInput, h: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="m" value={horaInput.m} onChange={e => setHoraInput({...horaInput, m: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="s" value={horaInput.s} onChange={e => setHoraInput({...horaInput, s: e.target.value})} />
-                  </div>
+              <div className="mode-selector" style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-md)', padding: '0.25rem' }}>
+                <button className={`mode-btn ${modoSol === 'tu_to_hv' ? 'active' : ''}`} onClick={() => setModoSol('tu_to_hv')}>TU ➔ Hv</button>
+                <button className={`mode-btn ${modoSol === 'hv_to_tu' ? 'active' : ''}`} onClick={() => setModoSol('hv_to_tu')}>Hv ➔ TU</button>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div className="form-group">
+                <label>{modoSol === 'tu_to_hv' ? 'Tiempo Universal (TU)' : 'Ángulo Horario Verdadero (Hv)'}</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="number" className="form-input" placeholder="h" value={inputSol.h} onChange={e => setInputSol({...inputSol, h: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="m" value={inputSol.m} onChange={e => setInputSol({...inputSol, m: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="s" value={inputSol.s} onChange={e => setInputSol({...inputSol, s: e.target.value})} />
                 </div>
-                <div className="form-group">
-                  <label>Huso Horario</label>
-                  <select className="form-input" value={huso} onChange={e => setHuso(e.target.value)}>
-                    <option value="0">0 (Greenwich)</option>
-                    <option value="-3">-3 (Argentina)</option>
-                    <option value="-4">-4 (HOA anterior)</option>
+                {problemaTipo === 'salida' && modoSol === 'hv_to_tu' && (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--primary-color)', marginTop: '0.25rem' }}>* Aquí va el valor H que calculaste en la Unidad 3</span>
+                )}
+              </div>
+              <div className="form-group">
+                <label>Ecuación del Tiempo (Et del SANA)</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select className="form-input" style={{ width: '60px' }} value={etInput.signo} onChange={e => setEtInput({...etInput, signo: e.target.value})}>
+                    <option value="+">+</option>
+                    <option value="-">-</option>
                   </select>
+                  <input type="number" className="form-input" placeholder="m" value={etInput.m} onChange={e => setEtInput({...etInput, m: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="s" value={etInput.s} onChange={e => setEtInput({...etInput, s: e.target.value})} />
                 </div>
               </div>
-              <button className="btn-primary" onClick={calcularHoras} style={{ marginTop: '1rem', width: '100%' }}>Calcular Sistema de Horas</button>
+            </div>
 
-              {resHoras && (
-                <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {resHoras.desarrollo.map((p, i) => (
-                    <div key={i} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--primary-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--primary-color)' }}>{p.t}</span>
-                        <span style={{ fontWeight: 'bold' }}>{p.v}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div className="form-group">
+                <label>Longitud (λ)</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input type="number" className="form-input" placeholder="°" value={longitud.d} onChange={e => setLongitud({...longitud, d: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="'" value={longitud.m} onChange={e => setLongitud({...longitud, m: e.target.value})} />
+                  <input type="number" className="form-input" placeholder="''" value={longitud.s} onChange={e => setLongitud({...longitud, s: e.target.value})} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Huso Horario</label>
+                <select className="form-input" value={huso} onChange={e => setHuso(e.target.value)}>
+                  <option value="0">0 (Greenwich)</option>
+                  <option value="-3">-3 (Argentina)</option>
+                  <option value="-4">-4 (HOA anterior)</option>
+                </select>
+              </div>
+            </div>
+
+            <button className="btn-primary" onClick={calcularSol} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <Calculator size={18} /> Calcular Transformación
+            </button>
+
+            {resSol && (
+              <div style={{ marginTop: '2rem' }}>
+                <div className="result-badge" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
+                  {modoSol === 'tu_to_hv' ? 'Hv Final = ' : 'TU Final = '} {resSol.final}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {resSol.steps.map((s, i) => (
+                    <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--primary-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{s.t}</span>
+                        <span style={{ fontWeight: 'bold' }}>{s.v}</span>
                       </div>
-                      {p.f && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Fórmula: {p.f} ➔ {p.d}</div>}
+                      {s.f && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{s.f} ➔ {s.d}</div>}
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'et' && (
-            <div className="glass-panel">
-              <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calculator color="var(--primary-color)" /> Ecuación del Tiempo (Et)
-              </h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Et = Tv - Tm (Tiempo Solar Verdadero - Tiempo Solar Medio)</p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div className="form-group">
-                  <label>Tv (Tiempo Solar Verdadero)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" className="form-input" placeholder="h" value={tvInput.h} onChange={e => setTvInput({...tvInput, h: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="m" value={tvInput.m} onChange={e => setTvInput({...tvInput, m: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="s" value={tvInput.s} onChange={e => setTvInput({...tvInput, s: e.target.value})} />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Tm (Tiempo Solar Medio)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" className="form-input" placeholder="h" value={tmInput.h} onChange={e => setTmInput({...tmInput, h: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="m" value={tmInput.m} onChange={e => setTmInput({...tmInput, m: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="s" value={tmInput.s} onChange={e => setTmInput({...tmInput, s: e.target.value})} />
-                  </div>
-                </div>
               </div>
-              
-              <button className="btn-primary" onClick={calcularET} style={{ marginTop: '1rem', width: '100%' }}>Calcular Et</button>
-
-              {resEt && (
-                <div style={{ marginTop: '2rem' }}>
-                  <div className="result-badge" style={{ fontSize: '1.5rem', padding: '1.5rem' }}>Et = {resEt.et}</div>
-                  <div style={{ marginTop: '1rem', fontFamily: 'monospace', fontSize: '0.9rem', textAlign: 'center', color: 'var(--text-muted)' }}>{resEt.desarrollo}</div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'intervalos' && (
-            <div className="glass-panel">
-              <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <RefreshCw color="var(--primary-color)" /> Conversión de Intervalos
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'flex-end' }}>
-                <div className="form-group">
-                  <label>Duración del Intervalo</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" className="form-input" placeholder="h" value={intervaloInput.h} onChange={e => setIntervaloInput({...intervaloInput, h: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="m" value={intervaloInput.m} onChange={e => setIntervaloInput({...intervaloInput, m: e.target.value})} />
-                    <input type="number" className="form-input" placeholder="s" value={intervaloInput.s} onChange={e => setIntervaloInput({...intervaloInput, s: e.target.value})} />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Tipo de Conversión</label>
-                  <select className="form-input" value={intervaloInput.tipo} onChange={e => setIntervaloInput({...intervaloInput, tipo: e.target.value})}>
-                    <option value="solar_to_sid">Solar Medio ➔ Sidéreo (x1.0027379)</option>
-                    <option value="sid_to_solar">Sidéreo ➔ Solar Medio (x0.9972696)</option>
-                  </select>
-                </div>
-              </div>
-              <button className="btn-primary" onClick={calcularIntervalo} style={{ marginTop: '1.5rem', width: '100%' }}>Convertir Intervalo</button>
-
-              {resIntervalo && (
-                <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{resIntervalo.tipo}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem' }}>
-                    <div style={{ fontSize: '1.2rem' }}>{resIntervalo.original}</div>
-                    <ArrowRight color="var(--primary-color)" />
-                    <div className="result-badge" style={{ fontSize: '1.5rem' }}>{resIntervalo.resultado}</div>
-                  </div>
-                  <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Factor aplicado: {resIntervalo.factor}</div>
-                </div>
-              )}
-            </div>
-          )}
-
+            )}
+          </div>
         </div>
 
-        {/* SIDEBAR DE AYUDA */}
         <aside>
           <div className="glass-panel" style={{ height: '100%', borderLeft: '3px solid var(--accent-color)' }}>
-            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
-              <Info size={20} color="var(--accent-color)" /> Ayuda Unidad 4
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
+              <Info color="var(--accent-color)" size={20} /> Tips de Problemas
             </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Datos que necesitas:</h4>
-                <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <li><strong>Fecha:</strong> Para buscar Θ₀ y EE en el SANA.</li>
-                  <li><strong>Huso Horario:</strong> Argentina usa -3 actualmente.</li>
-                  <li><strong>Tv / Tm:</strong> El ángulo horario del Sol (Verdadero o Medio).</li>
-                </ul>
-              </div>
-
-              <div style={{ padding: '0.75rem', background: 'rgba(236, 72, 153, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
-                <h4 style={{ fontSize: '0.85rem', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>¿Qué es la Et?</h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  Es la diferencia entre el tiempo solar verdadero y el medio. 
-                  Se debe a la excentricidad de la órbita terrestre y la oblicuidad de la eclíptica.
-                  <strong> Siempre es menor a 16 minutos.</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.85rem' }}>
+              
+              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+                <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Sun size={16} /> Salida/Puesta
+                </h4>
+                <p style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  En problemas de salida y puesta, el valor de <strong>H</strong> que obtienes es el <strong>Hv</strong>.
                 </p>
               </div>
 
-              <div>
-                <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Escalas de Tiempo:</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.25rem' }}>
-                    <span>Civil</span>
-                    <span style={{ fontFamily: 'monospace' }}>Tm + 12h</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.25rem' }}>
-                    <span>Legal</span>
-                    <span style={{ fontFamily: 'monospace' }}>TU + Huso</span>
-                  </div>
-                </div>
+              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+                <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <HelpCircle size={16} /> ¿Qué datos tengo?
+                </h4>
+                <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <li><strong>φ y δ:</strong> Calcula H en Unidad 3.</li>
+                  <li><strong>TU y Huso:</strong> Calcula HOA y HCL.</li>
+                  <li><strong>Hv y Et:</strong> Calcula el Tiempo Medio (Tm).</li>
+                </ul>
               </div>
 
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <BookOpen size={40} color="rgba(255,255,255,0.05)" />
+              <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  Selecciona una opción en el asistente para ver la guía paso a paso de resolución.
+                </p>
               </div>
             </div>
           </div>
         </aside>
-
       </div>
     </div>
   );
