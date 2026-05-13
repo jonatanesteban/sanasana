@@ -8,6 +8,25 @@ export default function SimuladorEsfera() {
   const [hAngle, setHAngle] = useState(2); // Ángulo Horario (hs)
   const [delta, setDelta] = useState(-35); // Declinación
 
+  // Formateadores
+  const formatDMS = (dec) => {
+    const abs = Math.abs(dec);
+    const d = Math.floor(abs);
+    const m = Math.floor((abs - d) * 60);
+    const s = ((abs - d) * 60 - m) * 60;
+    return `${dec < 0 ? '-' : ''}${d}° ${m}' ${s.toFixed(2)}''`;
+  };
+
+  const formatHMS = (decimal) => {
+    let abs = Math.abs(decimal);
+    while (abs >= 24) abs -= 24;
+    while (abs < 0) abs += 24;
+    const h = Math.floor(abs);
+    const m = Math.floor((abs - h) * 60);
+    const s = ((abs - h) * 60 - m) * 60;
+    return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s.toFixed(2)).padStart(5, '0')}s`;
+  };
+
   // Cálculos derivados
   const alpha = (tsl - hAngle + 24) % 24; 
 
@@ -75,7 +94,7 @@ export default function SimuladorEsfera() {
         <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Star size={32} color="var(--primary-color)" className="animate-pulse" /> Simulador de Esfera Celeste
         </h1>
-        <p style={{ color: 'var(--text-muted)' }}>Representación gráfica y resolución paso a paso.</p>
+        <p style={{ color: 'var(--text-muted)' }}>Representación gráfica y resolución detallada en GMS.</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }}>
@@ -104,30 +123,39 @@ export default function SimuladorEsfera() {
 
           <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid #10b981' }}>
             <h4 style={{ color: '#10b981', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Zap size={18} /> Desarrollo del Cálculo
+              <Zap size={18} /> Desarrollo Matemático
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.85rem' }}>
               <div>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }}>1. Ascensión Recta (α):</p>
-                <p style={{ fontFamily: 'monospace' }}>α = TSL - H = {tsl}h - {hAngle}h = <strong>{alpha.toFixed(2)}h</strong></p>
+                <p style={{ fontFamily: 'monospace' }}>α = TSL - H = {tsl}h - {hAngle}h</p>
+                <p style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>α = {formatHMS(alpha)}</p>
               </div>
               <div>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }}>2. Altura (h):</p>
                 <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>sen h = sen φ sen δ + cos φ cos δ cos H</p>
-                <p style={{ fontFamily: 'monospace' }}>sen h = ({sinPhi.toFixed(4)})({sinDelta.toFixed(4)}) + ({cosPhi.toFixed(4)})({cosDelta.toFixed(4)})({cosH.toFixed(4)})</p>
-                <p style={{ fontFamily: 'monospace' }}>sen h = {sinH.toFixed(6)} → <strong>h = {hAstroDeg.toFixed(2)}°</strong></p>
+                <p style={{ fontFamily: 'monospace' }}>sen h = ({sinPhi.toFixed(4)})({sinDelta.toFixed(4)}) + ({cosPhi.toFixed(4)})({cosDelta.toFixed(4)})({cosH.toFixed(4)}) = {sinH.toFixed(6)}</p>
+                <p style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>h = {formatDMS(hAstroDeg)}</p>
               </div>
               <div>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem' }}>3. Azimut (Az):</p>
                 <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>cos Az = (sen δ - sen φ sen h) / (cos φ cos h)</p>
-                <p style={{ fontFamily: 'monospace' }}>cos Az = ({sinDelta.toFixed(4)} - {sinPhi.toFixed(4)}×{sinH.toFixed(4)}) / ({cosPhi.toFixed(4)}×{Math.cos(hAstroRad).toFixed(4)})</p>
-                <p style={{ fontFamily: 'monospace' }}>cos Az = {cosAzValue.toFixed(6)} → <strong>Az = {azDeg.toFixed(2)}°</strong></p>
+                <p style={{ fontFamily: 'monospace' }}>cos Az = ({sinDelta.toFixed(4)} - {sinPhi.toFixed(4)}×{sinH.toFixed(4)}) / ({cosPhi.toFixed(4)}×{Math.cos(hAstroRad).toFixed(4)}) = {cosAzValue.toFixed(6)}</p>
+                <p style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>Az = {formatDMS(azDeg)}</p>
               </div>
             </div>
           </div>
         </aside>
 
         <section className="glass-panel" style={{ position: 'relative', overflow: 'hidden', padding: 0, minHeight: '500px' }}>
+          <div style={{ position: 'absolute', bottom: '1rem', right: '1rem', textAlign: 'right', pointerEvents: 'none' }}>
+            <div style={{ background: 'rgba(0,0,0,0.6)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary-color)' }}>
+               <p style={{ color: 'var(--primary-color)', fontSize: '0.8rem', fontWeight: 'bold' }}>SISTEMA LOCAL</p>
+               <p style={{ fontSize: '1.1rem' }}>h: {formatDMS(hAstroDeg)}</p>
+               <p style={{ fontSize: '1.1rem' }}>Az: {formatDMS(azDeg)}</p>
+            </div>
+          </div>
+
           <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ background: 'radial-gradient(circle at center, #1e1e2e 0%, #000 100%)' }}>
             <circle cx={center} cy={center} r={radius} fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
             <line x1={Z.x} y1={Z.y} x2={Na.x} y2={Na.y} stroke="rgba(255,255,255,0.2)" strokeDasharray="4" />
@@ -159,12 +187,14 @@ export default function SimuladorEsfera() {
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', fontSize: '0.9rem', lineHeight: '1.6' }}>
           <div>
-            <p style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>Elementos Locales:</p>
-            <p style={{ color: 'var(--text-muted)' }}>El observador está casi en el ecuador (5°N), por lo que el Polo Norte Celeste está muy bajo. El horizonte es el plano de referencia para la Altura ({hAstroDeg.toFixed(1)}°).</p>
+            <p style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>Sistemas de Coordenadas:</p>
+            <p style={{ color: 'var(--text-muted)' }}>La estrella está definida localmente por su Altura ({formatDMS(hAstroDeg)}) y Azimut ({formatDMS(azDeg)}). Absolutamente se define por su Declinación ({delta}°) y Ascensión Recta ({formatHMS(alpha)}).</p>
           </div>
-          <div>
-            <p style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>Elementos Absolutos:</p>
-            <p style={{ color: 'var(--text-muted)' }}>La Declinación (-35°) indica que la estrella está en el Hemisferio Sur Celeste. La Ascensión Recta (8h) la ubica en una posición fija respecto al punto Aries.</p>
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Resumen Final:</p>
+            <p><strong>α:</strong> {formatHMS(alpha)}</p>
+            <p><strong>h:</strong> {formatDMS(hAstroDeg)}</p>
+            <p><strong>Az:</strong> {formatDMS(azDeg)}</p>
           </div>
         </div>
       </section>
