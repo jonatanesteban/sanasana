@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon, Navigation } from 'lucide-react';
+import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon, Navigation, Target, Zap } from 'lucide-react';
 
 export default function CalculoSol() {
   const [lat, setLat] = useState({ d: '-34', m: '0', s: '0' });
@@ -182,11 +182,14 @@ export default function CalculoSol() {
             </div>
 
             {resHv && (
-              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 {resHv.error ? (
                   <div style={{ color: 'red' }}>{resHv.error}</div>
                 ) : (
                   <>
+                    <h4 style={{ color: 'var(--primary-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                      <Target size={18} /> Resultados de Salida y Puesta
+                    </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                       <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {resHv && formatDMS(resHv.azW)}</div>
                       <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {resHv && formatDMS(resHv.azE)}</div>
@@ -219,12 +222,14 @@ export default function CalculoSol() {
             )}
 
             {resVertical && (
-              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
                 {resVertical.error ? (
                   <div style={{ color: 'red' }}>{resVertical.error}</div>
                 ) : (
                   <>
-                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', fontSize: '0.9rem' }}>Paso por el Primer Vertical</h4>
+                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                      <Navigation size={18} /> Resultados del Primer Vertical
+                    </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
                       <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
@@ -303,10 +308,13 @@ export default function CalculoSol() {
             </div>
 
             {resFinal && (
-              <div style={{ marginTop: '1rem' }}>
+              <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-color)' }}>
+                <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                  <Zap size={18} /> Transformación a Hora del Reloj
+                </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>HOA: {resFinal.hoa}</div>
-                  <div className="result-badge">TU: {resFinal.tu}</div>
+                  <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>HOA Final: {resFinal.hoa}</div>
+                  <div className="result-badge">TU Final: {resFinal.tu}</div>
                 </div>
                 {resFinal.esCulminacion && (
                   <div style={{ marginBottom: '1.5rem', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', border: '1px solid #10b981', textAlign: 'center', fontWeight: 'bold', fontSize: '0.9rem' }}>
