@@ -4,6 +4,7 @@ import Inicio from './pages/Inicio'
 import TiempoSidereo from './pages/TiempoSidereo'
 import PosicionEstrellas from './pages/PosicionEstrellas'
 import Unidad3 from './pages/Unidad3'
+import Unidad4 from './pages/Unidad4'
 import FormulasCalculos from './pages/FormulasCalculos'
 import './App.css'
 
@@ -62,6 +63,14 @@ function App() {
           </button>
 
           <button 
+            className={`nav-btn ${activePage === 'unidad4' ? 'active' : ''}`}
+            onClick={() => { setActivePage('unidad4'); setIsMobileMenuOpen(false); }}
+          >
+            <Clock size={20} />
+            <span>Unidad 4</span>
+          </button>
+
+          <button 
             className={`nav-btn ${activePage === 'formulas' ? 'active' : ''}`}
             onClick={() => { setActivePage('formulas'); setIsMobileMenuOpen(false); }}
           >
@@ -77,6 +86,7 @@ function App() {
         {activePage === 'tiemposidereo' && <TiempoSidereo />}
         {activePage === 'estrellas' && <PosicionEstrellas />}
         {activePage === 'unidad3' && <Unidad3 />}
+        {activePage === 'unidad4' && <Unidad4 />}
         {activePage === 'formulas' && <FormulasCalculos />}
       </main>
     </div>
