@@ -29,6 +29,14 @@ export default function CalculoSol() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s.toFixed(2)).padStart(5, '0')}`;
   };
 
+  const formatDMS = (dec) => {
+    const abs = Math.abs(dec);
+    const d = Math.floor(abs);
+    const m = Math.floor((abs - d) * 60);
+    const s = ((abs - d) * 60 - m) * 60;
+    return `${dec < 0 ? '-' : ''}${d}° ${m}' ${s.toFixed(2)}''`;
+  };
+
   const calcularHv = () => {
     const phiRad = toRad(dmsToDec(lat.d, lat.m, lat.s));
     const decRad = toRad(dmsToDec(dec.d, dec.m, dec.s));
@@ -41,8 +49,8 @@ export default function CalculoSol() {
     
     const hDeg = toDeg(Math.acos(cosH));
     const hHoras = hDeg / 15;
-    const cosAz = Math.sin(decRad) / Math.cos(phiRad);
-    const az = toDeg(Math.acos(cosAz));
+    const cosAz = -(Math.sin(decRad) / Math.cos(phiRad));
+    const az = toDeg(Math.acos(Math.max(-1, Math.min(1, cosAz))));
 
     // Duraciones
     const durDia = hHoras * 2;
@@ -57,7 +65,7 @@ export default function CalculoSol() {
       steps: [
         { t: '1. Coseno de H', f: 'cos H = -tan φ · tan δ', v: cosH.toFixed(6) },
         { t: '2. Ángulo Horario (H)', f: 'H = arccos(cos H)', v: `${hHoras.toFixed(4)}h (${hDeg.toFixed(2)}°)` },
-        { t: '3. Azimut en Horizonte', f: 'cos Az = sen δ / cos φ', v: `${az.toFixed(2)}°` },
+        { t: '3. Azimut en Horizonte', f: 'cos Az = -(sen δ / cos φ)', v: formatDMS(az) },
         { t: '4. Duración del Día', f: 'D = 2 × H', v: formatH(durDia) },
         { t: '5. Duración de la Noche', f: 'N = 24 - D', v: formatH(durNoche) }
       ]
