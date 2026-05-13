@@ -171,6 +171,7 @@ export default function CalculoSol() {
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
                   <input type="number" className="form-input" value={longitud.d} onChange={e => setLongitud({...longitud, d: e.target.value})} />
                   <input type="number" className="form-input" value={longitud.m} onChange={e => setLongitud({...longitud, m: e.target.value})} />
+                  <input type="number" className="form-input" value={longitud.s} onChange={e => setLongitud({...longitud, s: e.target.value})} />
                 </div>
               </div>
               <div className="form-group">
