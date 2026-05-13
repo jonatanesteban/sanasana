@@ -76,6 +76,7 @@ export default function CalculoSol() {
     setResFinal({
       hoa: formatH(hoa),
       tu: formatH(tu),
+      esCulminacion: hvUse === 0,
       steps: [
         { t: '1. Tiempo Medio (Tm)', f: 'Hv - Et', v: formatH(tm) },
         { t: '2. Hora Civil Local (HCL)', f: 'Tm + 12h', v: formatH(hcl) },
@@ -210,6 +211,11 @@ export default function CalculoSol() {
                   <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>HOA: {resFinal.hoa}</div>
                   <div className="result-badge">TU: {resFinal.tu}</div>
                 </div>
+                {resFinal.esCulminacion && (
+                  <div style={{ marginBottom: '1.5rem', padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 'var(--radius-sm)', border: '1px solid #10b981', textAlign: 'center', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                    Este es el valor de la culminación superior
+                  </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {resFinal.steps.map((s, i) => (
                     <div key={i} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-color)' }}>
