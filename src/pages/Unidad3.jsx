@@ -3,9 +3,9 @@ import { BookOpen, Calculator, ArrowRight, MapPin, Star, Clock, RefreshCw, Info,
 
 export default function Unidad3() {
   const [modo, setModo] = useState('ecu_to_hor'); 
-  const [val1, setVal1] = useState({ d: '2', m: '0', s: '0' }); 
+  const [val1, setVal1] = useState({ d: '2', m: '0', s: '0', dir: 'E' }); 
   const [val2, setVal2] = useState({ d: '-35', m: '0', s: '0' }); 
-  const [lat, setLat] = useState({ d: '5', m: '0', s: '0' });   
+  const [lat, setLat] = useState({ d: '5', m: '0', s: '0', dir: 'N' });   
 
   const [casoEspecial, setCasoEspecial] = useState('culminacion');
   const [subCaso, setSubCaso] = useState('superior_norte'); 
@@ -16,10 +16,14 @@ export default function Unidad3() {
 
   const toRad = (deg) => (deg * Math.PI) / 180;
   const toDeg = (rad) => (rad * 180) / Math.PI;
-  const dmsToDec = (d, m, s) => {
-    const deg = parseFloat(d || 0);
-    return (Math.abs(deg) + (parseFloat(m || 0) / 60) + (parseFloat(s || 0) / 3600)) * (deg < 0 ? -1 : 1);
+
+  const dmsToDec = (d, m, s, dir) => {
+    let deg = parseFloat(d || 0);
+    let val = (Math.abs(deg) + (parseFloat(m || 0) / 60) + (parseFloat(s || 0) / 3600));
+    if (dir === 'S' || dir === 'W' || deg < 0) return -val;
+    return val;
   };
+
   const formatDMS = (dec) => {
     const abs = Math.abs(dec);
     const d = Math.floor(abs);
@@ -33,34 +37,30 @@ export default function Unidad3() {
     const center = 150;
     const hR = toRad(h);
     const azR = toRad(az);
-    
     const x = radius * Math.cos(hR) * Math.sin(azR);
     const y = -radius * Math.sin(hR);
     const z = radius * Math.cos(hR) * Math.cos(azR);
-
     const tilt = toRad(tiltVal);
     const rot = toRad(rotVal);
-    
     const x1 = x * Math.cos(rot) - z * Math.sin(rot);
     const z1 = x * Math.sin(rot) + z * Math.cos(rot);
     const y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt);
-    
     return { x: center + x1, y: center + y2, z: z1 };
   };
 
   const calcular = (e) => {
     if (e) e.preventDefault();
     const pasos = [];
-    const phiDec = dmsToDec(lat.d, lat.m, lat.s);
+    const phiDec = dmsToDec(lat.d, lat.m, lat.s, lat.dir);
     const phiRad = toRad(phiDec);
     setSugerenciaSol(false);
 
     let hAstroFinal, azAstroFinal;
 
     if (modo === 'ecu_to_hor') {
-      const hHorarioDec = dmsToDec(val1.d, val1.m, val1.s);
+      const hHorarioDec = dmsToDec(val1.d, val1.m, val1.s, 'E');
       const hDeg = hHorarioDec * 15;
-      const decDec = dmsToDec(val2.d, val2.m, val2.s);
+      const decDec = dmsToDec(val2.d, val2.m, val2.s, 'N');
       const hRad = toRad(hDeg);
       const decRad = toRad(decDec);
 
@@ -80,8 +80,8 @@ export default function Unidad3() {
       pasos.push({ titulo: 'Azimut (Az)', formula: 'tan Az = sen H / (sen φ cos H - cos φ tan δ)', desarrollo: `atan2(${numAz.toFixed(4)}, ${denAz.toFixed(4)})`, resultado: formatDMS(azAstroFinal) });
 
     } else if (modo === 'hor_to_ecu') {
-      const azDec = dmsToDec(val1.d, val1.m, val1.s);
-      const zDec = dmsToDec(val2.d, val2.m, val2.s);
+      const azDec = dmsToDec(val1.d, val1.m, val1.s, 'E');
+      const zDec = dmsToDec(val2.d, val2.m, val2.s, 'N');
       azAstroFinal = azDec;
       hAstroFinal = 90 - zDec;
       const azRad = toRad(azDec);
@@ -98,7 +98,7 @@ export default function Unidad3() {
       pasos.push({ titulo: 'Ángulo Horario (H)', formula: 'tan H = sen Az / (cos φ cot z + sen φ cos Az)', desarrollo: `atan2(${numH.toFixed(4)}, ${denH.toFixed(4)})`, resultado: formatDMS(hDecRaw) });
 
     } else if (modo === 'especiales') {
-      const decDec = dmsToDec(val2.d, val2.m, val2.s);
+      const decDec = dmsToDec(val2.d, val2.m, val2.s, 'N');
       if (casoEspecial === 'culminacion') {
         let z, az, h_ang;
         if (subCaso === 'superior_norte') { az = 180; h_ang = 0; z = phiDec - decDec; }
@@ -131,23 +131,34 @@ export default function Unidad3() {
         <section className="inputs-section">
           <form onSubmit={calcular} className="glass-panel">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {modo === 'especiales' && (
-                <div className="form-group">
-                  <label>Situación Especial</label>
-                  <select className="form-input" value={casoEspecial} onChange={e => setCasoEspecial(e.target.value)}>
-                    <option value="culminacion">Culminación</option>
-                    <option value="salida_puesta">Salida y Puesta</option>
-                  </select>
-                </div>
-              )}
               <div className="input-group-box">
-                <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Ángulo Horario (H)' : modo === 'hor_to_ecu' ? 'Azimut (Az)' : 'Latitud (φ)'}</h4>
+                <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>Latitud (φ)</h4>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="number" className="form-input" value={modo === 'especiales' ? lat.d : val1.d} onChange={e => modo === 'especiales' ? setLat({...lat, d: e.target.value}) : setVal1({...val1, d: e.target.value})} />
-                  <input type="number" className="form-input" value={modo === 'especiales' ? lat.m : val1.m} onChange={e => modo === 'especiales' ? setLat({...lat, m: e.target.value}) : setVal1({...val1, m: e.target.value})} />
-                  <input type="number" className="form-input" value={modo === 'especiales' ? lat.s : val1.s} onChange={e => modo === 'especiales' ? setLat({...lat, s: e.target.value}) : setVal1({...val1, s: e.target.value})} />
+                  <select className="form-input" style={{ width: '60px' }} value={lat.dir} onChange={e => setLat({...lat, dir: e.target.value})}>
+                    <option value="N">N</option>
+                    <option value="S">S</option>
+                  </select>
+                  <input type="number" placeholder="°" className="form-input" value={lat.d} onChange={e => setLat({...lat, d: e.target.value})} />
+                  <input type="number" placeholder="'" className="form-input" value={lat.m} onChange={e => setLat({...lat, m: e.target.value})} />
+                  <input type="number" className="form-input" value={lat.s} onChange={e => setLat({...lat, s: e.target.value})} />
                 </div>
               </div>
+
+              <div className="input-group-box">
+                <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Ángulo Horario (H)' : modo === 'hor_to_ecu' ? 'Azimut (Az)' : 'Longitud (λ)'}</h4>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {modo === 'especiales' && (
+                    <select className="form-input" style={{ width: '60px' }} value={val1.dir} onChange={e => setVal1({...val1, dir: e.target.value})}>
+                      <option value="E">E</option>
+                      <option value="W">W</option>
+                    </select>
+                  )}
+                  <input type="number" className="form-input" value={val1.d} onChange={e => setVal1({...val1, d: e.target.value})} />
+                  <input type="number" className="form-input" value={val1.m} onChange={e => setVal1({...val1, m: e.target.value})} />
+                  <input type="number" className="form-input" value={val1.s} onChange={e => setVal1({...val1, s: e.target.value})} />
+                </div>
+              </div>
+
               <div className="input-group-box">
                 <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Declinación (δ)' : modo === 'hor_to_ecu' ? 'Distancia Cenital (z)' : 'Declinación (δ)'}</h4>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -156,16 +167,6 @@ export default function Unidad3() {
                   <input type="number" className="form-input" value={val2.s} onChange={e => setVal2({...val2, s: e.target.value})} />
                 </div>
               </div>
-              {modo !== 'especiales' && (
-                <div className="input-group-box">
-                  <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>Latitud (φ)</h4>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" className="form-input" value={lat.d} onChange={e => setLat({...lat, d: e.target.value})} />
-                    <input type="number" className="form-input" value={lat.m} onChange={e => setLat({...lat, m: e.target.value})} />
-                    <input type="number" className="form-input" value={lat.s} onChange={e => setLat({...lat, s: e.target.value})} />
-                  </div>
-                </div>
-              )}
             </div>
             <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '1rem' }}>Calcular y Graficar <Sparkles size={18} /></button>
           </form>
@@ -187,95 +188,58 @@ export default function Unidad3() {
           )}
         </section>
 
-        <aside className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem', background: 'linear-gradient(135deg, rgba(30, 30, 46, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}><Globe color="var(--accent-color)" size={20} /> Esfera Celeste Premium</h3>
+        <aside className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}><Globe color="var(--accent-color)" size={20} /> Esfera Celeste Detallada</h3>
           
-          <div style={{ width: '100%', height: '400px', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative', border: '1px solid var(--glass-border)', boxShadow: 'inset 0 0 50px rgba(59, 130, 246, 0.1)' }}>
+          <div style={{ width: '100%', height: '400px', borderRadius: 'var(--radius-md)', overflow: 'hidden', position: 'relative', border: '1px solid var(--glass-border)', background: '#000' }}>
             {currentCoords ? (
               <svg width="100%" height="100%" viewBox="0 0 300 400">
-                <defs>
-                  <radialGradient id="skyGradient" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#1e1e2e" />
-                    <stop offset="100%" stopColor="#000" />
-                  </radialGradient>
-                </defs>
+                <circle cx="150" cy="200" r="120" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.1)" />
                 
-                {/* Fondo de Estrellas */}
-                {[...Array(20)].map((_, i) => (
-                  <circle key={i} cx={Math.random() * 300} cy={Math.random() * 400} r={Math.random() * 1} fill="white" opacity={Math.random()} />
-                ))}
-
-                {/* Esfera Principal */}
-                <circle cx="150" cy="200" r="120" fill="url(#skyGradient)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
-                
-                {/* ELEMENTOS ABSOLUTOS: Meridiano del Lugar */}
-                <ellipse cx="150" cy="200" rx="40" ry="120" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="5" />
-                
-                {/* EJE DEL MUNDO Y POLOS */}
-                {(() => {
-                  const pnc = project(currentCoords.phi, 0);
-                  const psc = project(currentCoords.phi - 180, 0);
-                  return (
-                    <g>
-                      <line x1={pnc.x} y1={pnc.y} x2={psc.x} y2={psc.y} stroke="#3b82f6" strokeWidth="1" opacity="0.4" />
-                      <circle cx={pnc.x} cy={pnc.y} r="3" fill="#3b82f6" />
-                      <text x={pnc.x + 8} y={pnc.y} fill="#3b82f6" fontSize="10" fontWeight="bold">PNC</text>
-                    </g>
-                  );
-                })()}
+                {/* PRIMER VERTICAL (E-O) */}
+                <ellipse cx="150" cy="200" rx="120" ry="120" fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="3" transform="rotate(25 150 200)" opacity="0.4" />
+                <text x="20" y="200" fill="#ef4444" fontSize="9">Primer Vertical</text>
 
                 {/* VERTICAL DEL LUGAR */}
-                <line x1="150" y1="80" x2="150" y2="320" stroke="var(--primary-color)" strokeWidth="2" strokeDasharray="4" opacity="0.5" />
+                <line x1="150" y1="80" x2="150" y2="320" stroke="#fff" strokeWidth="1.5" strokeDasharray="5" opacity="0.6" />
                 <text x="150" y="70" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">Z (Zenit)</text>
 
-                {/* Horizonte y Almucantaráts */}
+                {/* ECUADOR CELESTE */}
+                <ellipse cx="150" cy={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="2" />
+                <text x="275" y={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} fill="var(--accent-color)" fontSize="10" fontWeight="bold">Ecuador</text>
+
+                {/* HORIZONTE */}
                 <ellipse cx="150" cy="200" rx="120" ry="30" fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" strokeWidth="2" />
-                <ellipse cx="150" cy="185" rx="115" ry="25" fill="none" stroke="rgba(59, 130, 246, 0.2)" strokeWidth="0.5" />
-                <ellipse cx="150" cy="165" rx="100" ry="20" fill="none" stroke="rgba(59, 130, 246, 0.2)" strokeWidth="0.5" />
 
-                {/* Ecuador Celeste */}
-                <ellipse cx="150" cy={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="1.5" opacity="0.5" />
-
-                {/* Estrella y Trazados */}
+                {/* ESTRELLA */}
                 {(() => {
                   const p = project(currentCoords.h, currentCoords.az);
-                  const pProjH = project(0, currentCoords.az);
                   return (
                     <g>
-                      {/* Arco de Altura */}
-                      <path d={`M ${pProjH.x} ${pProjH.y} Q 150 200 ${p.x} ${p.y}`} fill="none" stroke="var(--primary-color)" strokeWidth="1" strokeDasharray="2" opacity="0.6" />
-                      <line x1="150" y1="200" x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.1)" />
-                      
-                      <circle cx={p.x} cy={p.y} r="8" fill="var(--primary-color)" filter="blur(2px)">
-                        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite" />
-                      </circle>
-                      <circle cx={p.x} cy={p.y} r="4" fill="white" />
-                      <text x={p.x + 12} y={p.y - 12} fill="white" fontSize="12" fontWeight="bold">★ Estrella</text>
+                      <circle cx={p.x} cy={p.y} r="6" fill="var(--primary-color)" />
+                      <circle cx={p.x} cy={p.y} r="2" fill="white" />
+                      <text x={p.x + 10} y={p.y - 10} fill="white" fontSize="12" fontWeight="bold">Estrella</text>
                     </g>
                   );
                 })()}
                 
-                {/* Referencias Cardinales */}
-                <text x="35" y="203" fill="#3b82f6" fontSize="10" fontWeight="bold">W</text>
-                <text x="265" y="203" fill="#3b82f6" fontSize="10" fontWeight="bold">E</text>
+                {/* Polos */}
+                {(() => {
+                  const pnc = project(currentCoords.phi, 0);
+                  return <circle cx={pnc.x} cy={pnc.y} r="3" fill="#3b82f6" />;
+                })()}
               </svg>
             ) : (
-              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: '1rem' }}>
-                <Globe size={48} opacity={0.2} />
-                <p style={{ fontSize: '0.85rem', textAlign: 'center', padding: '0 2rem' }}>Ingresa los datos para generar la Esfera Celeste 3D detallada.</p>
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                Calcula para ver el gráfico.
               </div>
             )}
           </div>
 
-          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
-             <p style={{ fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '0.5rem' }}>Elementos Añadidos:</p>
-             <ul style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-               <li>🌌 <strong>Starfield:</strong> Fondo de estrellas dinámico.</li>
-               <li>🌐 <strong>Meridiano del Lugar:</strong> Círculo que une Z y PNC.</li>
-               <li>🔄 <strong>Almucantaráts:</strong> Círculos de altura secundaria.</li>
-               <li>📌 <strong>Polos Celestes:</strong> Ubicación del PNC y PSC.</li>
-               <li>💡 <strong>Brillo:</strong> Efecto de atmósfera en la estrella.</li>
-             </ul>
+          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem' }}>
+             <p><strong>Latitud:</strong> {lat.dir} | <strong>Longitud:</strong> {val1.dir}</p>
+             <p style={{ color: '#ef4444', marginTop: '0.5rem' }}>● <strong>Primer Vertical:</strong> Línea roja punteada.</p>
+             <p style={{ color: 'var(--accent-color)' }}>● <strong>Ecuador:</strong> Línea continua naranja.</p>
           </div>
         </aside>
       </main>
