@@ -134,9 +134,9 @@ export default function Unidad3() {
               <div className="input-group-box">
                 <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>Latitud (φ)</h4>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <select className="form-input" style={{ width: '60px' }} value={lat.dir} onChange={e => setLat({...lat, dir: e.target.value})}>
-                    <option value="N">N</option>
-                    <option value="S">S</option>
+                  <select className="form-input" style={{ width: '65px' }} value={lat.dir} onChange={e => setLat({...lat, dir: e.target.value})}>
+                    <option value="N">Norte</option>
+                    <option value="S">Sur</option>
                   </select>
                   <input type="number" placeholder="°" className="form-input" value={lat.d} onChange={e => setLat({...lat, d: e.target.value})} />
                   <input type="number" placeholder="'" className="form-input" value={lat.m} onChange={e => setLat({...lat, m: e.target.value})} />
@@ -147,12 +147,6 @@ export default function Unidad3() {
               <div className="input-group-box">
                 <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Ángulo Horario (H)' : modo === 'hor_to_ecu' ? 'Azimut (Az)' : 'Longitud (λ)'}</h4>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {modo === 'especiales' && (
-                    <select className="form-input" style={{ width: '60px' }} value={val1.dir} onChange={e => setVal1({...val1, dir: e.target.value})}>
-                      <option value="E">E</option>
-                      <option value="W">W</option>
-                    </select>
-                  )}
                   <input type="number" className="form-input" value={val1.d} onChange={e => setVal1({...val1, d: e.target.value})} />
                   <input type="number" className="form-input" value={val1.m} onChange={e => setVal1({...val1, m: e.target.value})} />
                   <input type="number" className="form-input" value={val1.s} onChange={e => setVal1({...val1, s: e.target.value})} />
@@ -162,9 +156,9 @@ export default function Unidad3() {
               <div className="input-group-box">
                 <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>{modo === 'ecu_to_hor' ? 'Declinación (δ)' : modo === 'hor_to_ecu' ? 'Distancia Cenital (z)' : 'Declinación (δ)'}</h4>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="number" className="form-input" value={val2.d} onChange={e => setVal2({...val2, d: e.target.value})} />
-                  <input type="number" className="form-input" value={val2.m} onChange={e => setVal2({...val2, m: e.target.value})} />
-                  <input type="number" className="form-input" value={val2.s} onChange={e => setVal2({...val2, s: e.target.value})} />
+                  <input type="number" className="form-input" value={val2.d} onChange={e => setVal2({...val2.d, d: e.target.value})} />
+                  <input type="number" className="form-input" value={val2.m} onChange={e => setVal2({...val2.m, m: e.target.value})} />
+                  <input type="number" className="form-input" value={val2.s} onChange={e => setVal2({...val2.s, s: e.target.value})} />
                 </div>
               </div>
             </div>
@@ -196,20 +190,23 @@ export default function Unidad3() {
               <svg width="100%" height="100%" viewBox="0 0 300 400">
                 <circle cx="150" cy="200" r="120" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.1)" />
                 
-                {/* PRIMER VERTICAL (E-O) */}
-                <ellipse cx="150" cy="200" rx="120" ry="120" fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="3" transform="rotate(25 150 200)" opacity="0.4" />
-                <text x="20" y="200" fill="#ef4444" fontSize="9">Primer Vertical</text>
+                {/* PRIMER VERTICAL: Círculo máximo que pasa por Z, E, Na, W */}
+                <ellipse cx="150" cy="200" rx="40" ry="120" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4" transform="rotate(25 150 200)" opacity="0.6" />
+                <text x="175" y="100" fill="#ef4444" fontSize="9" fontWeight="bold">PRIMER VERTICAL (Z-E-Na-W)</text>
 
-                {/* VERTICAL DEL LUGAR */}
-                <line x1="150" y1="80" x2="150" y2="320" stroke="#fff" strokeWidth="1.5" strokeDasharray="5" opacity="0.6" />
+                {/* VERTICAL DEL LUGAR (Z-Na) */}
+                <line x1="150" y1="80" x2="150" y2="320" stroke="#fff" strokeWidth="2" strokeDasharray="5" />
                 <text x="150" y="70" textAnchor="middle" fill="#fff" fontSize="12" fontWeight="bold">Z (Zenit)</text>
+                <text x="150" y="335" textAnchor="middle" fill="#aaa" fontSize="12" fontWeight="bold">Na (Nadir)</text>
 
                 {/* ECUADOR CELESTE */}
-                <ellipse cx="150" cy={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="2" />
-                <text x="275" y={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} fill="var(--accent-color)" fontSize="10" fontWeight="bold">Ecuador</text>
+                <ellipse cx="150" cy={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--accent-color)" strokeWidth="2.5" />
+                <text x="35" y={200 + (120 * Math.sin(toRad(currentCoords.phi)) * 0.3) + 15} fill="var(--accent-color)" fontSize="9" fontWeight="bold">ECUADOR CELESTE</text>
 
                 {/* HORIZONTE */}
                 <ellipse cx="150" cy="200" rx="120" ry="30" fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" strokeWidth="2" />
+                <text x="20" y="205" fill="#3b82f6" fontSize="10" fontWeight="bold">W</text>
+                <text x="270" y="205" fill="#3b82f6" fontSize="10" fontWeight="bold">E</text>
 
                 {/* ESTRELLA */}
                 {(() => {
@@ -218,15 +215,9 @@ export default function Unidad3() {
                     <g>
                       <circle cx={p.x} cy={p.y} r="6" fill="var(--primary-color)" />
                       <circle cx={p.x} cy={p.y} r="2" fill="white" />
-                      <text x={p.x + 10} y={p.y - 10} fill="white" fontSize="12" fontWeight="bold">Estrella</text>
+                      <text x={p.x + 10} y={p.y - 10} fill="white" fontSize="12" fontWeight="bold">★ Estrella</text>
                     </g>
                   );
-                })()}
-                
-                {/* Polos */}
-                {(() => {
-                  const pnc = project(currentCoords.phi, 0);
-                  return <circle cx={pnc.x} cy={pnc.y} r="3" fill="#3b82f6" />;
                 })()}
               </svg>
             ) : (
@@ -236,10 +227,10 @@ export default function Unidad3() {
             )}
           </div>
 
-          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem' }}>
-             <p><strong>Latitud:</strong> {lat.dir} | <strong>Longitud:</strong> {val1.dir}</p>
-             <p style={{ color: '#ef4444', marginTop: '0.5rem' }}>● <strong>Primer Vertical:</strong> Línea roja punteada.</p>
-             <p style={{ color: 'var(--accent-color)' }}>● <strong>Ecuador:</strong> Línea continua naranja.</p>
+          <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)', fontSize: '0.8rem' }}>
+             <p style={{ color: '#ef4444', marginBottom: '0.4rem' }}>● <strong>Primer Vertical:</strong> Arco rojo (Zenit ↔ Nadir).</p>
+             <p style={{ color: 'var(--accent-color)', marginBottom: '0.4rem' }}>● <strong>Ecuador:</strong> Línea naranja principal.</p>
+             <p style={{ color: '#fff' }}>● <strong>Eje Z-Na:</strong> Vertical del Lugar.</p>
           </div>
         </aside>
       </main>
