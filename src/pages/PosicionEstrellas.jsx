@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, Calculator, MapPin, ArrowRight } from 'lucide-react';
 import { getData } from '../utils/storage';
+import SkyMapGraphic from '../components/SkyMapGraphic';
 
 export default function PosicionEstrellas() {
   // Input States
@@ -435,6 +436,16 @@ export default function PosicionEstrellas() {
               <Calculator size={20} color="var(--primary-color)" /> Desarrollo del Cálculo
             </h3>
             
+            {desarrollo.length > 0 && (
+              <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
+                <SkyMapGraphic 
+                  az={parseFloat(desarrollo.find(p => p.titulo === 'Azimut del Astro (Az)')?.resultado.match(/\((.*?)°\)/)[1] || 0)}
+                  alt={parseFloat(desarrollo.find(p => p.titulo === 'Altura del Astro (h)')?.resultado.match(/= (.*?)°/)[1] || 0)}
+                  name="Rigel (Ejemplo)"
+                />
+              </div>
+            )}
+
             {desarrollo.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {desarrollo.map((paso, index) => (

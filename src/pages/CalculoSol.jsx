@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sun, Clock, Calculator, ArrowRight, HelpCircle, Info, RefreshCw, MapPin, Moon, Navigation, Target, Zap } from 'lucide-react';
+import SolarPathGraphic from '../components/SolarPathGraphic';
 
 export default function CalculoSol() {
   const [lat, setLat] = useState({ d: '-34', m: '0', s: '0' });
@@ -177,6 +178,18 @@ export default function CalculoSol() {
               <h4 style={{ color: '#10b981', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Target size={18} /> Resultados de Salida y Puesta
               </h4>
+              
+              {/* Gráfico de Trayectoria Solar */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <SolarPathGraphic 
+                  lat={dmsToDec(lat.d, lat.m, lat.s)}
+                  dec={dmsToDec(dec.d, dec.m, dec.s)}
+                  sunriseH={resHv.h} 
+                  sunsetH={resHv.h}
+                  culminationH={90 - Math.abs(dmsToDec(lat.d, lat.m, lat.s) - dmsToDec(dec.d, dec.m, dec.s))}
+                />
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {formatDMS(resHv.azW)}</div>
                 <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {formatDMS(resHv.azE)}</div>
