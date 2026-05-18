@@ -371,66 +371,139 @@ export default function Unidad3() {
             <div style={{ width: '100%', height: '450px', position: 'relative' }}>
               {currentCoords ? (
                 <svg width="100%" height="100%" viewBox="0 0 300 450">
+                  {/* 1. Círculo base */}
                   <circle cx="150" cy="225" r="120" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
                   
-                  <line x1="150" y1="105" x2="150" y2="345" stroke="#fff" strokeWidth="2" strokeDasharray="5" />
-                  <text x="150" y="95" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">Z</text>
-                  <text x="150" y="360" textAnchor="middle" fill="#aaa" fontSize="14" fontWeight="bold">N'</text>
+                  {/* 2. Eje Vertical (Z - N') 3D */}
+                  {(() => {
+                    const pZ = project(90, 0);
+                    const pNadir = project(-90, 0);
+                    return (
+                      <g>
+                        <line x1={pZ.x} y1={pZ.y} x2={pNadir.x} y2={pNadir.y} stroke="#fff" strokeWidth="2" strokeDasharray="5" />
+                        <text x={pZ.x} y={pZ.y - 10} textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">Z</text>
+                        <text x={pNadir.x} y={pNadir.y + 15} textAnchor="middle" fill="#aaa" fontSize="14" fontWeight="bold">N'</text>
+                      </g>
+                    );
+                  })()}
   
-                  <ellipse cx="150" cy="225" rx="120" ry="30" fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" strokeWidth="2" />
-                  <text x="25" y="230" fill="#3b82f6" fontSize="10" fontWeight="bold">N</text>
-                  <text x="270" y="230" fill="#3b82f6" fontSize="10" fontWeight="bold">S</text>
+                  {/* 3. LÍNEA DEL HORIZONTE Y PUNTOS CARDINALES */}
+                  {(() => {
+                    const pts = [];
+                    for(let az=0; az<=360; az+=5) {
+                      const p = project(0, az);
+                      pts.push(`${p.x},${p.y}`);
+                    }
+                    const pn = project(0, 0);
+                    const ps = project(0, 180);
+                    const pe = project(0, 90);
+                    const pw = project(0, 270);
+                    return (
+                      <g>
+                        <polygon points={pts.join(' ')} fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" strokeWidth="2" />
+                        <g fontSize="11" fontWeight="bold" fill="#3b82f6">
+                          <text x={pn.x - 5} y={pn.y - 8}>N</text>
+                          <text x={ps.x + 5} y={ps.y + 12}>S</text>
+                          <text x={pe.x + 8} y={pe.y + 5}>E</text>
+                          <text x={pw.x - 15} y={pw.y + 5}>W</text>
+                        </g>
+                      </g>
+                    );
+                  })()}
                   
+                  {/* 4. Elevación del Polo y Eje del Mundo */}
                   {(() => {
                     const phi = currentCoords.phi;
                     const poleAlt = Math.abs(phi);
                     const poleAz = phi < 0 ? 180 : 0; 
                     const pMain = project(poleAlt, poleAz);
-                    const pOpp = project(-poleAlt, poleAz + 180);
+                    const pOpp = project(-poleAlt, poleAz === 180 ? 0 : 180);
                     const isSouth = phi < 0;
   
                     return (
                       <g>
                         <line x1={pMain.x} y1={pMain.y} x2={pOpp.x} y2={pOpp.y} stroke="#f59e0b" strokeWidth="2" strokeDasharray="4" />
                         <circle cx={pMain.x} cy={pMain.y} r="4" fill="#f59e0b" />
-                        <text x={pMain.x + 10} y={pMain.y} fill="#f59e0b" fontSize="12" fontWeight="bold">{isSouth ? 'Ps' : 'Pn'}</text>
-                        <text x={pOpp.x - 10} y={pOpp.y} fill="#f59e0b" fontSize="12" fontWeight="bold">{isSouth ? 'Pn' : 'Ps'}</text>
+                        <text x={pMain.x + 8} y={pMain.y - 8} fill="#f59e0b" fontSize="12" fontWeight="bold">{isSouth ? 'Ps' : 'Pn'}</text>
+                        <text x={pOpp.x - 15} y={pOpp.y + 15} fill="#f59e0b" fontSize="12" fontWeight="bold">{isSouth ? 'Pn' : 'Ps'}</text>
                       </g>
                     );
                   })()}
   
+                  {/* 5. ECUADOR CELESTE (Polilínea 3D) */}
                   {(() => {
-                     const phi = currentCoords.phi;
-                     return <ellipse cx="150" cy={225 + (120 * Math.sin(toRad(phi)) * 0.3)} rx="120" ry="20" fill="none" stroke="var(--primary-color)" strokeWidth="2.5" />;
+                    const phiRad = toRad(currentCoords.phi);
+                    const points = [];
+                    for (let h = 0; h <= 360; h += 5) {
+                      const hRad = toRad(h);
+                      const cosZ = Math.cos(phiRad) * Math.cos(hRad); 
+                      const zRad = Math.acos(Math.max(-1, Math.min(1, cosZ)));
+                      const alt = 90 - toDeg(zRad);
+                      const numAz = Math.sin(hRad);
+                      const denAz = Math.sin(phiRad) * Math.cos(hRad);
+                      let az = toDeg(Math.atan2(numAz, denAz));
+                      if (az < 0) az += 360;
+                      const pt = project(alt, az);
+                      points.push(`${pt.x},${pt.y}`);
+                    }
+                    return <polygon points={points.join(' ')} fill="none" stroke="var(--primary-color)" strokeWidth="2.5" />;
                   })()}
   
+                  {/* PRIMER VERTICAL (Z-E-Na-W) */}
+                  {(() => {
+                    const points = [];
+                    for (let alt = -90; alt <= 90; alt += 5) {
+                      const pt = project(alt, 90);
+                      points.push(`${pt.x},${pt.y}`);
+                    }
+                    for (let alt = 90; alt >= -90; alt -= 5) {
+                      const pt = project(alt, 270);
+                      points.push(`${pt.x},${pt.y}`);
+                    }
+                    return <polygon points={points.join(' ')} fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4" opacity="0.6" />;
+                  })()}
+
+                  {/* 6. PUNTO ARIES (gamma) */}
                   {(() => {
                      const ariesH = currentCoords.tsl; 
-                     const pAries = project(0, ariesH * 15 + 180); 
+                     const hRad = toRad(ariesH * 15);
+                     const phiRad = toRad(currentCoords.phi);
+                     
+                     const cosZ = Math.cos(phiRad) * Math.cos(hRad);
+                     const zRad = Math.acos(Math.max(-1, Math.min(1, cosZ)));
+                     const alt = 90 - toDeg(zRad);
+                     const numAz = Math.sin(hRad);
+                     const denAz = Math.sin(phiRad) * Math.cos(hRad);
+                     let az = toDeg(Math.atan2(numAz, denAz));
+                     if (az < 0) az += 360;
+
+                     const pAries = project(alt, az);
                      return (
                        <g>
-                         <text x={pAries.x} y={pAries.y} fill="var(--accent-color)" fontSize="18" fontWeight="bold">γ</text>
+                         <circle cx={pAries.x} cy={pAries.y} r="4" fill="var(--accent-color)" />
+                         <text x={pAries.x + 8} y={pAries.y + 8} fill="var(--accent-color)" fontSize="18" fontWeight="bold">γ</text>
                        </g>
                      );
                   })()}
   
+                  {/* 7. ESTRELLA Y CÍRCULO HORARIO */}
                   {(() => {
                     const p = project(currentCoords.h, currentCoords.az);
                     const phi = currentCoords.phi;
-                    const pnc = project(phi, phi < 0 ? 180 : 0);
-                    const psc = project(phi - 180, phi < 0 ? 180 : 0);
+                    const poleAlt = Math.abs(phi);
+                    const poleAz = phi < 0 ? 180 : 0; 
+                    const pnc = project(poleAlt, poleAz);
+                    const psc = project(-poleAlt, poleAz === 180 ? 0 : 180);
   
                     return (
                       <g>
-                        <path d={`M ${pnc.x} ${pnc.y} Q ${p.x} ${p.y} ${psc.x} ${psc.y}`} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="3" />
+                        <path d={`M ${pnc.x} ${pnc.y} Q ${p.x} ${p.y} ${psc.x} ${psc.y}`} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeDasharray="3" />
                         <circle cx={p.x} cy={p.y} r="6" fill="var(--primary-color)" />
                         <circle cx={p.x} cy={p.y} r="2" fill="white" />
                         <text x={p.x + 10} y={p.y - 10} fill="white" fontSize="12" fontWeight="bold">S (Astro)</text>
                       </g>
                     );
                   })()}
-  
-                  <ellipse cx="150" cy="225" rx="40" ry="120" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4" transform="rotate(25 150 225)" opacity="0.4" />
                 </svg>
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', textAlign: 'center' }}>
