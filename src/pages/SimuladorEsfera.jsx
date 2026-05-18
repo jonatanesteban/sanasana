@@ -56,34 +56,69 @@ export default function SimuladorEsfera() {
     const abs = Math.abs(dec);
     const g = Math.floor(abs);
     const m = Math.floor((abs - g) * 60);
-    const s = Math.round(((abs - g) * 60 - m) * 60);
+    const s = ((abs - g) * 60 - m) * 60;
     return { g: g * (dec < 0 ? -1 : 1), m, s };
   };
 
-  // Componente de Input Sexagesimal
+  // Componente de Input Sexagesimal Refactorizado para máxima estabilidad
   const SexagesimalInput = ({ label, value, onChange, isHours = false }) => {
-    const gms = decToGMS(value);
-    const update = (field, val) => {
-      const newGms = { ...gms, [field]: parseFloat(val) || 0 };
-      onChange(gmsToDec(newGms.g, newGms.m, newGms.s));
+    const [localGMS, setLocalGMS] = React.useState({ g: '', m: '', s: '' });
+    const [isFocused, setIsFocused] = React.useState(false);
+    const lastReportedValue = React.useRef(value);
+
+    // Sincronizar estado local SOLO cuando el valor cambia desde fuera y NO tenemos el foco
+    React.useEffect(() => {
+      if (isFocused) return;
+      
+      const gms = decToGMS(value);
+      setLocalGMS({
+        g: gms.g.toString(),
+        m: gms.m.toString(),
+        s: gms.s.toFixed(2).replace(/\.00$/, '')
+      });
+      lastReportedValue.current = value;
+    }, [value, isFocused]);
+
+    const handleLocalChange = (field, val) => {
+      // Actualizamos inmediatamente el estado local
+      const newLocal = { ...localGMS, [field]: val };
+      setLocalGMS(newLocal);
+
+      // Solo intentamos actualizar el padre si es un número que tiene sentido
+      // Permitimos cadenas vacías, puntos o solo el signo menos sin crashear
+      const g = parseFloat(newLocal.g);
+      const m = parseFloat(newLocal.m);
+      const s = parseFloat(newLocal.s);
+      
+      if (!isNaN(g) || !isNaN(m) || !isNaN(s)) {
+        const newDec = gmsToDec(isNaN(g) ? 0 : g, isNaN(m) ? 0 : m, isNaN(s) ? 0 : s);
+        lastReportedValue.current = newDec;
+        onChange(newDec);
+      }
     };
 
     return (
       <div className="form-group" style={{ marginBottom: '8px' }}>
         <label style={{ fontSize: '0.75rem', opacity: 0.8, color: 'var(--primary-color)', fontWeight: 'bold' }}>{label}</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
-          <div style={{ position: 'relative' }}>
-            <input type="number" className="form-input" value={gms.g} onChange={e => update('g', e.target.value)} style={{ paddingRight: '15px' }} />
-            <span style={{ position: 'absolute', right: '5px', top: '8px', fontSize: '0.7rem', opacity: 0.5 }}>{isHours ? 'h' : '°'}</span>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <input type="number" className="form-input" value={gms.m} onChange={e => update('m', e.target.value)} style={{ paddingRight: '15px' }} />
-            <span style={{ position: 'absolute', right: '5px', top: '8px', fontSize: '0.7rem', opacity: 0.5 }}>m</span>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <input type="number" className="form-input" value={gms.s} onChange={e => update('s', e.target.value)} style={{ paddingRight: '15px' }} />
-            <span style={{ position: 'absolute', right: '5px', top: '8px', fontSize: '0.7rem', opacity: 0.5 }}>s</span>
-          </div>
+          {['g', 'm', 's'].map((f) => (
+            <div key={f} style={{ position: 'relative' }}>
+              <input 
+                type="text" 
+                inputMode="decimal"
+                className="form-input" 
+                placeholder="0"
+                value={localGMS[f]} 
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onChange={e => handleLocalChange(f, e.target.value)} 
+                style={{ paddingRight: '15px' }} 
+              />
+              <span style={{ position: 'absolute', right: '5px', top: '8px', fontSize: '0.7rem', opacity: 0.5 }}>
+                {f === 'g' ? (isHours ? 'h' : '°') : f === 'm' ? 'm' : 's'}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     );

@@ -95,12 +95,16 @@ export default function CalculoSol() {
     const zDec = toDeg(Math.acos(cosZ));
     const hAngHoras = toDeg(Math.acos(cosH)) / 15;
 
+    const azEste = phiDec < 0 ? 270 : 90;
+    const azOeste = phiDec < 0 ? 90 : 270;
+
     setResVertical({
-      z: zDec, h: 90 - zDec, hAng: hAngHoras,
+      z: zDec, h: 90 - zDec, hAng: hAngHoras, azEste, azOeste,
       steps: [
         { t: '1. Distancia Cenital (z)', f: 'cos z = sen δ / sen φ', d: `sen(${decDec.toFixed(4)}) / sen(${phiDec.toFixed(4)})`, v: formatDMS(zDec) },
         { t: '2. Altura (h)', f: 'h = 90° - z', d: `90 - ${zDec.toFixed(4)}`, v: formatDMS(90 - zDec) },
-        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', d: `tan(${decDec.toFixed(4)}) / tan(${phiDec.toFixed(4)})`, v: `${hAngHoras.toFixed(4)}h` }
+        { t: '3. Ángulo Horario (H)', f: 'cos H = tan δ / tan φ', d: `tan(${decDec.toFixed(4)}) / tan(${phiDec.toFixed(4)})`, v: `${hAngHoras.toFixed(4)}h` },
+        { t: '4. Azimuts en la vertical', f: phiDec < 0 ? 'Latitud Sur' : 'Latitud Norte', d: `φ = ${phiDec.toFixed(4)}°`, v: `E: ${azEste}°, W: ${azOeste}°` }
       ]
     });
     setResVerticalTime(null);
@@ -245,6 +249,8 @@ export default function CalculoSol() {
                 <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
                 <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
                 <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Az Oeste (W): {resVertical.azOeste}°</div>
+                <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Az Este (E): {resVertical.azEste}°</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
