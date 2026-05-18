@@ -8,6 +8,7 @@ export default function CalculoSol() {
   const [et, setEt] = useState({ m: '0', s: '0', signo: '-' });
   const [longitud, setLongitud] = useState({ d: '-68', m: '0', s: '0' });
   const [huso, setHuso] = useState('-3');
+  const [formulaModal, setFormulaModal] = useState(null);
 
   const [resHv, setResHv] = useState(null);
   const [resFinalGeneral, setResFinalGeneral] = useState(null);
@@ -195,12 +196,12 @@ export default function CalculoSol() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="result-badge" style={{ borderColor: '#ef4444' }}>Az Puesta (W): {formatDMS(resHv.azW)}</div>
-                <div className="result-badge" style={{ borderColor: '#10b981' }}>Az Salida (E): {formatDMS(resHv.azE)}</div>
-                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Puesta (W): {formatH(resHv.h)}</div>
-                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Salida (E): {formatH(24 - resHv.h)}</div>
-                <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Día: {formatH(resHv.durDia)}</div>
-                <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Noche: {formatH(resHv.durNoche)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }} onClick={() => setFormulaModal({...resHv.steps[2], title: 'Azimut Puesta (W)', color: '#ef4444', nota: 'Se calcula a partir del coseno del azimut en el momento del ocaso.'})}>Az Puesta (W): {formatDMS(resHv.azW)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }} onClick={() => setFormulaModal({...resHv.steps[3], title: 'Azimut Salida (E)', color: '#10b981', nota: 'El azimut de salida es simétrico al de puesta respecto al meridiano (360° - AzW).'})}>Az Salida (E): {formatDMS(resHv.azE)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }} onClick={() => setFormulaModal({...resHv.steps[1], title: 'Ángulo Horario de Puesta (W)', color: '#ef4444'})}>H Puesta (W): {formatH(resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }} onClick={() => setFormulaModal({t: 'H Salida', f: '24h - H(W)', d: `24 - ${resHv.h.toFixed(4)}`, v: formatH(24 - resHv.h), title: 'Ángulo Horario de Salida (E)', color: '#10b981'})}>H Salida (E): {formatH(24 - resHv.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#f59e0b' }} onClick={() => setFormulaModal({...resHv.steps[4], title: 'Duración del Día', color: '#f59e0b'})}>Día: {formatH(resHv.durDia)}</div>
+                <div className="result-badge" style={{ borderColor: '#3b82f6' }} onClick={() => setFormulaModal({...resHv.steps[5], title: 'Duración de la Noche', color: '#3b82f6'})}>Noche: {formatH(resHv.durNoche)}</div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
@@ -245,12 +246,12 @@ export default function CalculoSol() {
                 <Navigation size={18} /> Resultados del Primer Vertical
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }}>Cenital (z): {formatDMS(resVertical.z)}</div>
-                <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }}>Altura (h): {formatDMS(resVertical.h)}</div>
-                <div className="result-badge" style={{ borderColor: '#ef4444' }}>H Oeste (W): {formatH(resVertical.hAng)}</div>
-                <div className="result-badge" style={{ borderColor: '#10b981' }}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
-                <div className="result-badge" style={{ borderColor: '#f59e0b' }}>Az Oeste (W): {resVertical.azOeste}°</div>
-                <div className="result-badge" style={{ borderColor: '#3b82f6' }}>Az Este (E): {resVertical.azEste}°</div>
+                <div className="result-badge" style={{ borderColor: 'var(--accent-color)' }} onClick={() => setFormulaModal({...resVertical.steps[0], title: 'Distancia Cenital (z)', color: 'var(--accent-color)'})}>Cenital (z): {formatDMS(resVertical.z)}</div>
+                <div className="result-badge" style={{ borderColor: 'var(--primary-color)' }} onClick={() => setFormulaModal({...resVertical.steps[1], title: 'Altura (h)', color: 'var(--primary-color)'})}>Altura (h): {formatDMS(resVertical.h)}</div>
+                <div className="result-badge" style={{ borderColor: '#ef4444' }} onClick={() => setFormulaModal({...resVertical.steps[2], title: 'Ángulo Horario Oeste (W)', color: '#ef4444'})}>H Oeste (W): {formatH(resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: '#10b981' }} onClick={() => setFormulaModal({t: 'H Este', f: '24h - H(W)', d: `24 - ${resVertical.hAng.toFixed(4)}`, v: formatH(24 - resVertical.hAng), title: 'Ángulo Horario Este (E)', color: '#10b981'})}>H Este (E): {formatH(24 - resVertical.hAng)}</div>
+                <div className="result-badge" style={{ borderColor: '#f59e0b' }} onClick={() => setFormulaModal({...resVertical.steps[3], title: 'Azimut Oeste (W)', color: '#f59e0b', nota: 'El azimut en la primera vertical depende exclusivamente del hemisferio.'})}>Az Oeste (W): {resVertical.azOeste}°</div>
+                <div className="result-badge" style={{ borderColor: '#3b82f6' }} onClick={() => setFormulaModal({...resVertical.steps[3], title: 'Azimut Este (E)', color: '#3b82f6', nota: 'El azimut en la primera vertical depende exclusivamente del hemisferio.'})}>Az Este (E): {resVertical.azEste}°</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
@@ -334,8 +335,8 @@ export default function CalculoSol() {
                   <Zap size={18} /> Resultado de Culminación
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                  <div className="result-badge" style={{ borderColor: '#10b981' }}>HOA: {resFinalGeneral.hoa}</div>
-                  <div className="result-badge">TU: {resFinalGeneral.tu}</div>
+                  <div className="result-badge" style={{ borderColor: '#10b981' }} onClick={() => setFormulaModal({...resFinalGeneral.steps[2], title: 'Cálculo de HOA (Culminación)', color: '#10b981'})}>HOA: {resFinalGeneral.hoa}</div>
+                  <div className="result-badge" style={{ borderColor: '#3b82f6' }} onClick={() => setFormulaModal({...resFinalGeneral.steps[3], title: 'Cálculo de TU (Culminación)', color: '#3b82f6'})}>TU: {resFinalGeneral.tu}</div>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: '#10b981', textAlign: 'center', marginBottom: '1rem', fontWeight: 'bold' }}>
                   Este es el valor de la culminación superior
@@ -361,8 +362,43 @@ export default function CalculoSol() {
         </h4>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           1. Ingresa Latitud y Declinación a la izquierda. 2. Calcula el evento (Salida o Vertical). 3. Ingresa Et y Longitud a la derecha. 4. Presiona "Transformar" en el bloque del evento para obtener la hora oficial.
+          <br/><br/>
+          <strong>💡 Tip:</strong> Haz clic en cualquier resultado (botones con bordes de color) para ver el desglose matemático paso a paso.
         </p>
       </footer>
+
+      {/* MODAL DE FÓRMULA */}
+      {formulaModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(5px)' }} onClick={() => setFormulaModal(null)}>
+          <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <button style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem' }} onClick={() => setFormulaModal(null)}>✕</button>
+            <h3 style={{ marginBottom: '1.5rem', color: formulaModal.color || 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calculator size={24} /> {formulaModal.title}
+            </h3>
+            
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1rem' }}>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Fórmula Base:</p>
+              <p style={{ margin: 0, fontSize: '1.3rem', fontFamily: 'monospace', textAlign: 'center', letterSpacing: '1px' }}>{formulaModal.f}</p>
+            </div>
+
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1rem' }}>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Desarrollo:</p>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'monospace', textAlign: 'center', color: '#cbd5e1' }}>{formulaModal.d}</p>
+            </div>
+
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '8px' }}>
+              <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Resultado:</p>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', color: formulaModal.color || 'white' }}>{formulaModal.v}</p>
+            </div>
+            
+            {formulaModal.nota && (
+              <p style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>
+                {formulaModal.nota}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
